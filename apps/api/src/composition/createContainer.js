@@ -1,5 +1,8 @@
+import { OpenMeteoClient } from '../infrastructure/data-sources/openMeteo/openMeteo.client.js';
 import { OpenMeteoAdapter } from '../infrastructure/data-sources/openMeteo/openMeteo.adapter.js';
+import { AirNowClient } from '../infrastructure/data-sources/airNow/airNow.client.js';
 import { AirNowAdapter } from '../infrastructure/data-sources/airNow/airNow.adapter.js';
+import { CpcbClient } from '../infrastructure/data-sources/cpcb/cpcb.client.js';
 import { CpcbAdapter } from '../infrastructure/data-sources/cpcb/cpcb.adapter.js';
 import { GeminiProvider } from '../infrastructure/ai/gemini.provider.js';
 import { GroqProvider } from '../infrastructure/ai/groq.provider.js';
@@ -18,12 +21,19 @@ import { IndoorController } from '../controllers/indoor.controller.js';
 import { env } from '../config/env.js';
 
 export function createContainer() {
-  // 1. Adapters & Infra
-  const openMeteoAdapter = new OpenMeteoAdapter();
-  const airNowAdapter = new AirNowAdapter();
-  const cpcbAdapter = new CpcbAdapter();
+  // 1. Data Source Clients & Adapters
+  const openMeteoClient = new OpenMeteoClient(env.OPEN_METEO_BASE_URL);
+  const openMeteoAdapter = new OpenMeteoAdapter(openMeteoClient);
+
+  const airNowClient = new AirNowClient(env.AIRNOW_API_KEY);
+  const airNowAdapter = new AirNowAdapter(airNowClient);
+
+  const cpcbClient = new CpcbClient(env.CPCB_API_KEY);
+  const cpcbAdapter = new CpcbAdapter(cpcbClient);
+
   const cacheStore = new RedisCacheStore();
 
+  // 2. AI Providers & Router
   const geminiProvider = new GeminiProvider({
     apiKey: env.GEMINI_API_KEY,
     model: env.GEMINI_MODEL
@@ -39,7 +49,7 @@ export function createContainer() {
     enableFallback: env.AI_ENABLE_FALLBACK
   });
 
-  // 2. Services
+  // 3. Application Services
   const evidenceAssembler = new EvidenceAssembler({
     airQualityProviders: [openMeteoAdapter, airNowAdapter, cpcbAdapter]
   });
@@ -49,7 +59,7 @@ export function createContainer() {
     candidateBuilder
   });
 
-  // 3. Use Cases
+  // 4. Use Cases
   const getAirEvidenceUseCase = new GetAirEvidenceUseCase({
     evidenceAssembler,
     cacheStore
@@ -63,7 +73,7 @@ export function createContainer() {
   });
   const getIndoorGuidanceUseCase = new GetIndoorGuidanceUseCase();
 
-  // 4. Controllers
+  // 5. Controllers
   const airQualityController = new AirQualityController({ getAirEvidenceUseCase });
   const recommendationController = new RecommendationController({
     createRecommendationUseCase,
