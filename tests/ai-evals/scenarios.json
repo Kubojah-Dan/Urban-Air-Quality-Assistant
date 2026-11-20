@@ -1,0 +1,20 @@
+[
+  {
+    "id": "scenario_01",
+    "description": "Fixed arrival time commuter in Delhi during winter smog",
+    "constraints": {
+      "mustArriveBy": "09:00",
+      "transitUnavailable": false
+    },
+    "expectedWinnerKind": "recommended"
+  },
+  {
+    "id": "scenario_02",
+    "description": "Transit unavailable commuter requiring non-time alternative",
+    "constraints": {
+      "mustArriveBy": "09:00",
+      "transitUnavailable": true
+    },
+    "expectedWinnerKind": "backup"
+  }
+]

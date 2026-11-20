@@ -1,0 +1,38 @@
+[
+  {
+    "id": "guidance_kitchen_exhaust",
+    "scenario": "cooking",
+    "action": "Use kitchen exhaust hood or open back window during cooking",
+    "mechanism": "exhaust_ventilation",
+    "preconditions": ["kitchen hood installed or back window present"],
+    "avoidWhen": ["outdoor wildfire smoke entering through unsealed intake"],
+    "sourceRefs": ["WHO Indoor Air Guidelines", "EPA Indoor air quality"],
+    "version": "1.0.0",
+    "reviewedAt": "2026-11-20T00:00:00Z",
+    "locale": "en"
+  },
+  {
+    "id": "guidance_source_control_incense",
+    "scenario": "indoor_fragrance",
+    "action": "Extinguish incense or scented candles; switch to electric LED alternatives",
+    "mechanism": "source_control",
+    "preconditions": [],
+    "avoidWhen": [],
+    "sourceRefs": ["EPA Guide to Air Cleaners in the Home"],
+    "version": "1.0.0",
+    "reviewedAt": "2026-11-20T00:00:00Z",
+    "locale": "en"
+  },
+  {
+    "id": "guidance_hepa_cleaner",
+    "scenario": "high_outdoor_pm",
+    "action": "Run portable HEPA air cleaner on medium/high in primary living space",
+    "mechanism": "filtration",
+    "preconditions": ["portable air cleaner available"],
+    "avoidWhen": ["ozone-generating ionizers"],
+    "sourceRefs": ["CARB Air Cleaning Devices Guidelines"],
+    "version": "1.0.0",
+    "reviewedAt": "2026-11-20T00:00:00Z",
+    "locale": "en"
+  }
+]

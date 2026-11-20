@@ -1,0 +1,12 @@
+[
+  {
+    "id": "emergency_co_alarm",
+    "trigger": "carbon_monoxide_alarm",
+    "urgency": "critical_immediate",
+    "steps": [
+      "Evacuate immediately into fresh air.",
+      "Call emergency services.",
+      "Do not re-enter until emergency responders declare the space safe."
+    ]
+  }
+]

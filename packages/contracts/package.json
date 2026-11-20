@@ -1,0 +1,20 @@
+{
+  "name": "@dayshift/contracts",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./location": "./src/location.schema.js",
+    "./airQuality": "./src/airQuality.schema.js",
+    "./evidence": "./src/evidence.schema.js",
+    "./routine": "./src/routine.schema.js",
+    "./candidate": "./src/candidate.schema.js",
+    "./impactReceipt": "./src/impactReceipt.schema.js",
+    "./modelOutput": "./src/modelOutput.schema.js",
+    "./api": "./src/api.schema.js"
+  },
+  "dependencies": {
+    "zod": "^3.24.2"
+  }
+}

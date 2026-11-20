@@ -1,0 +1,53 @@
+flowchart TB
+  U[Adult user] --> WEB
+  subgraph CLIENT[Client: React + Vite + JavaScript]
+    WEB[DayShift responsive web app]
+    FEAT[Feature modules: Routine / Indoor / Impact / Evidence]
+    STATE[TanStack Query + session-only routine state]
+    WEB --> FEAT --> STATE
+  end
+  STATE -->|HTTPS JSON / optional SSE progress| API
+  subgraph SERVER[API: Node.js + Express on Cloud Run]
+    API[Routes + Zod validation]
+    AUTH[Optional Firebase Auth verification]
+    USE[Application use cases]
+    RULES[Domain feasibility, freshness and safety rules]
+    IMPACT[Deterministic Impact Receipt calculator]
+    GUIDANCE[Reviewed indoor guidance repository]
+    AI[Genkit model gateway]
+    ROUTER[Provider router / timeout / circuit breaker]
+    API --> AUTH --> USE
+    USE --> RULES
+    USE --> IMPACT
+    USE --> GUIDANCE
+    USE --> AI --> ROUTER
+  end
+  subgraph SOURCES[Evidence providers]
+    OM[Open-Meteo / CAMS forecast]
+    AIR[AirNow: U.S. reporting-area AQI/advisories]
+    CPCB[CPCB / data.gov.in: India stations]
+    OAQ[OpenAQ: optional station corroboration]
+    CACHE[(Redis TTL cache + shared quotas)]
+  end
+  USE --> CACHE
+  USE --> OM
+  USE --> AIR
+  USE --> CPCB
+  USE -. optional .-> OAQ
+  subgraph MODELS[GenAI providers]
+    GEM[Google Gemini API — primary]
+    GROQ[Groq API — fallback]
+  end
+  ROUTER --> GEM
+  ROUTER -->|429 / timeout / retryable 5xx| GROQ
+  subgraph OPTIONAL[Optional persistence and operations]
+    AUTHDB[(Firebase Authentication)]
+    FS[(Firestore: opt-in saved routines only)]
+    SEC[Google Secret Manager]
+    OBS[Cloud Logging / Monitoring — redacted]
+  end
+  AUTH -.-> AUTHDB
+  USE -. user opt-in .-> FS
+  SERVER --> SEC
+  SERVER --> OBS
+  API -->|Validated candidates + receipt + evidence provenance| WEB
