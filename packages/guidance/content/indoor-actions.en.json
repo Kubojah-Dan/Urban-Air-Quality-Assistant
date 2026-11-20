@@ -2,36 +2,78 @@
   {
     "id": "guidance_kitchen_exhaust",
     "scenario": "cooking",
-    "action": "Use kitchen exhaust hood or open back window during cooking",
+    "title": "Kitchen Range Exhaust or Cross-Ventilation",
+    "action": "Run kitchen exhaust hood on high during frying, boiling, or sautéing; if no vented hood, open a non-street-facing window",
     "mechanism": "exhaust_ventilation",
-    "preconditions": ["kitchen hood installed or back window present"],
-    "avoidWhen": ["outdoor wildfire smoke entering through unsealed intake"],
-    "sourceRefs": ["WHO Indoor Air Guidelines", "EPA Indoor air quality"],
-    "version": "1.0.0",
+    "preconditions": ["kitchen exhaust hood or exterior window present"],
+    "avoidWhen": ["outdoor wildfire smoke entering through unsealed intake window"],
+    "sourceRefs": [
+      "WHO Guidelines for Indoor Air Quality: Selected Pollutants (2010)",
+      "U.S. EPA Indoor Air Quality: Cooking and Ventilation in Homes"
+    ],
+    "version": "1.1.0",
     "reviewedAt": "2026-11-20T00:00:00Z",
     "locale": "en"
   },
   {
     "id": "guidance_source_control_incense",
     "scenario": "indoor_fragrance",
-    "action": "Extinguish incense or scented candles; switch to electric LED alternatives",
+    "title": "Source Control for Incense and Scented Candles",
+    "action": "Extinguish incense sticks and scented combustion candles; switch to electric flameless LED diffusers",
     "mechanism": "source_control",
     "preconditions": [],
     "avoidWhen": [],
-    "sourceRefs": ["EPA Guide to Air Cleaners in the Home"],
-    "version": "1.0.0",
+    "sourceRefs": [
+      "U.S. EPA Guide to Air Cleaners in the Home (2018)",
+      "California Air Resources Board (CARB): Indoor Air Pollution from Combustion"
+    ],
+    "version": "1.1.0",
     "reviewedAt": "2026-11-20T00:00:00Z",
     "locale": "en"
   },
   {
     "id": "guidance_hepa_cleaner",
     "scenario": "high_outdoor_pm",
-    "action": "Run portable HEPA air cleaner on medium/high in primary living space",
+    "title": "Portable True HEPA Air Filtration",
+    "action": "Operate portable mechanical HEPA air cleaner on medium or high speed in the primary occupied room with windows and doors closed",
     "mechanism": "filtration",
-    "preconditions": ["portable air cleaner available"],
-    "avoidWhen": ["ozone-generating ionizers"],
-    "sourceRefs": ["CARB Air Cleaning Devices Guidelines"],
-    "version": "1.0.0",
+    "preconditions": ["portable mechanical air cleaner available"],
+    "avoidWhen": ["ozone-generating electrostatic precipitators or ionizers"],
+    "sourceRefs": [
+      "CARB Certified Air Cleaning Devices Regulations",
+      "U.S. EPA Residential Air Cleaners Guide"
+    ],
+    "version": "1.1.0",
+    "reviewedAt": "2026-11-20T00:00:00Z",
+    "locale": "en"
+  },
+  {
+    "id": "guidance_natural_ventilation_clean_window",
+    "scenario": "low_outdoor_pm",
+    "title": "Natural Ventilation During Clean Afternoon Window",
+    "action": "Open windows on opposite sides of the home for 20-30 minutes during the lowest ambient pollution window (early afternoon) to purge indoor CO2 and VOCs",
+    "mechanism": "exhaust_ventilation",
+    "preconditions": ["outdoor air quality is moderate or clean", "no immediate localized smoke"],
+    "avoidWhen": ["rush-hour roadside traffic peaks", "active outdoor agricultural burning or dust storms"],
+    "sourceRefs": [
+      "ASHRAE Standard 62.2: Ventilation and Acceptable Indoor Air Quality in Residential Buildings"
+    ],
+    "version": "1.1.0",
+    "reviewedAt": "2026-11-20T00:00:00Z",
+    "locale": "en"
+  },
+  {
+    "id": "guidance_cleaning_voc_control",
+    "scenario": "cleaning",
+    "title": "Fragrance-Free Cleaning Source Control",
+    "action": "Use unscented or microfiber cleaning methods and avoid aerosolized pine/citrus solvents that react with ozone to form secondary particulates",
+    "mechanism": "source_control",
+    "preconditions": [],
+    "avoidWhen": [],
+    "sourceRefs": [
+      "U.S. EPA Safer Choice Standard for Household Cleaners"
+    ],
+    "version": "1.1.0",
     "reviewedAt": "2026-11-20T00:00:00Z",
     "locale": "en"
   }

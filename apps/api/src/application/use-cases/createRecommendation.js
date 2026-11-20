@@ -4,8 +4,8 @@ export class CreateRecommendationUseCase {
     this.recommendationOrchestrator = recommendationOrchestrator;
   }
 
-  async execute(baseline, locationContext) {
+  async execute(baseline, locationContext, options = {}) {
     const evidence = await this.getAirEvidenceUseCase.execute(locationContext);
-    return this.recommendationOrchestrator.orchestrate(baseline, evidence);
+    return this.recommendationOrchestrator.orchestrate(baseline, evidence, options);
   }
 }

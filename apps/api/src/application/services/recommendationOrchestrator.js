@@ -1,52 +1,130 @@
-import { buildOutdoorContextReceipt, calculateEmissionsSavings } from '@dayshift/domain';
+import {
+  buildOutdoorContextReceipt,
+  calculateEmissionsSavings,
+  evaluateIndoorSafetyPolicy
+} from '@dayshift/domain';
 
 export class RecommendationOrchestrator {
-  constructor({ modelRouter, candidateBuilder }) {
+  constructor({ modelRouter = null, candidateBuilder }) {
     this.modelRouter = modelRouter;
     this.candidateBuilder = candidateBuilder;
   }
 
-  async orchestrate(baseline, evidenceBundle) {
+  async orchestrate(baseline, evidenceBundle, options = { skipAi: false }) {
     const { usual, recommended, backup, eligibleCandidates } =
       this.candidateBuilder.buildCandidates(baseline, evidenceBundle);
 
-    const modelInput = {
-      baselineId: baseline.id,
-      candidates: eligibleCandidates,
-      evidenceIds: evidenceBundle.records.map((r) => r.id)
+    const countryCode = evidenceBundle?.locationContext?.countryCode || 'IN';
+    const primaryEvidence = evidenceBundle?.records?.[0] || null;
+
+    // Determine model ranking & explanation
+    let modelResult = {
+      provider: 'deterministic_engine',
+      model: 'deterministic-rules-v1',
+      fallbackTriggered: false
     };
 
-    const modelResult = await this.modelRouter.routeRecommendation(modelInput);
+    if (!options.skipAi && this.modelRouter) {
+      const modelInput = {
+        baselineId: baseline.id,
+        candidates: eligibleCandidates,
+        evidenceIds: evidenceBundle.records.map((r) => r.id)
+      };
+      modelResult = await this.modelRouter.routeRecommendation(modelInput);
+    }
 
-    // Build deterministic Impact Receipts
-    const primaryEvidence = evidenceBundle.records[0] || null;
-    const outdoorContext = buildOutdoorContextReceipt(primaryEvidence);
-    const emissionsEstimate = calculateEmissionsSavings('transit', 12, {
-      transit: { id: 'ef_bus', activityClass: 'urban_bus', gramsPerKm: 50, source: 'ARAI 2024' }
+    // Evaluate indoor safety policy based on ambient outdoor PM2.5
+    const isOutdoorHazardous = primaryEvidence?.value > 150;
+    const indoorPolicy = evaluateIndoorSafetyPolicy({
+      outdoorHazardous: isOutdoorHazardous,
+      extremeHeat: false,
+      coAlarmTriggered: false
     });
 
-    const receipt = {
-      id: `receipt_${baseline.id}`,
+    // 1. Impact Receipt for Usual Plan (Baseline)
+    const receiptUsual = {
+      id: 'receipt_usual',
       baselineId: baseline.id,
-      outdoorContext,
+      outdoorContext: buildOutdoorContextReceipt(
+        primaryEvidence,
+        `Planned departure window (${usual.departureMinutes ? String(Math.floor(usual.departureMinutes / 60)).padStart(2, '0') + ':' + String(usual.departureMinutes % 60).padStart(2, '0') : '08:00'})`
+      ),
       indoorAction: {
-        actionTitle: 'Keep indoor air clean with source control and kitchen exhaust',
+        actionTitle: 'Baseline Indoor Air Routine',
         mechanism: 'source_control',
         prerequisites: [],
-        avoidWhen: []
+        avoidWhen: isOutdoorHazardous ? ['Opening windows during peak outdoor pollution'] : []
       },
-      emissionsEstimate,
-      assumptions: ['12 km one-way commute distance assumed for urban transit replacement.'],
-      unknowns: ['Exact tailpipe fleet composition on user route is unmeasured.']
+      emissionsEstimate: {
+        status: 'not_estimated',
+        estimatedTailpipeCo2GramsSaved: null,
+        note: 'Baseline travel plan represents reference emissions point. No reduction relative to itself.'
+      },
+      assumptions: ['Reference travel pattern as entered by user.'],
+      unknowns: ['Personal breathing rate and hyper-local curb-side concentrations are unmeasured.']
+    };
+
+    // 2. Impact Receipt for Recommended Change
+    const commuteDistanceKm = 10;
+    const targetMode = recommended.requiresTransit ? 'transit' : 'walk';
+    const emissionsResult = calculateEmissionsSavings(targetMode, commuteDistanceKm, countryCode);
+
+    const receiptRecommended = {
+      id: 'receipt_recommended',
+      baselineId: baseline.id,
+      outdoorContext: buildOutdoorContextReceipt(
+        primaryEvidence,
+        `Adjusted departure window (${recommended.departureMinutes !== undefined ? String(Math.floor(recommended.departureMinutes / 60)).padStart(2, '0') + ':' + String(recommended.departureMinutes % 60).padStart(2, '0') : '07:30'})`
+      ),
+      indoorAction: {
+        actionTitle: indoorPolicy.allowWindowVentilation
+          ? 'Cross-Ventilation During Cleaner Afternoon Window'
+          : 'Seal Windows and Run Mechanical HEPA Recirculation',
+        mechanism: indoorPolicy.allowWindowVentilation ? 'exhaust_ventilation' : 'filtration',
+        prerequisites: indoorPolicy.allowWindowVentilation ? [] : ['Mechanical HEPA filter present'],
+        avoidWhen: indoorPolicy.allowWindowVentilation ? ['Rush hour traffic peaks'] : ['Unsealed open windows']
+      },
+      emissionsEstimate: emissionsResult,
+      assumptions: [
+        `${commuteDistanceKm} km representative trip distance assumed for urban commuting.`,
+        'Emissions computed strictly against verified regional factor baseline (tailpipe CO₂ only).'
+      ],
+      unknowns: [
+        'Exact fleet technology of specific vehicles on the chosen transit corridor is unmeasured.',
+        'Ambient air concentration is not converted to individual inhaled dose.'
+      ]
+    };
+
+    // 3. Impact Receipt for Backup Plan
+    const receiptBackup = {
+      id: 'receipt_backup',
+      baselineId: baseline.id,
+      outdoorContext: buildOutdoorContextReceipt(
+        primaryEvidence,
+        'Delayed or sheltered indoor backup window'
+      ),
+      indoorAction: {
+        actionTitle: 'Wait Indoors in Filtered Air Lobby / Errand Combination',
+        mechanism: 'source_control',
+        prerequisites: ['Access to commercial or public indoor facility with central filtration'],
+        avoidWhen: ['Unfiltered outdoor bus waiting shelters on arterial roads']
+      },
+      emissionsEstimate: {
+        status: 'not_estimated',
+        estimatedTailpipeCo2GramsSaved: null,
+        note: 'Backup plan focuses on exposure timing and physical sheltering; travel emissions are not changed.'
+      },
+      assumptions: ['Non-time backup utilized when primary change is infeasible.'],
+      unknowns: ['Indoor filtration efficiency of transit waiting lobby is unmeasured.']
     };
 
     return {
       baselineId: baseline.id,
       candidates: { usual, recommended, backup },
       impactReceipts: {
-        receipt_usual: receipt,
-        receipt_recommended: receipt,
-        receipt_backup: receipt
+        receipt_usual: receiptUsual,
+        receipt_recommended: receiptRecommended,
+        receipt_backup: receiptBackup
       },
       evidence: evidenceBundle,
       modelInfo: {
@@ -55,7 +133,7 @@ export class RecommendationOrchestrator {
         fallbackTriggered: modelResult.fallbackTriggered || false,
         fallbackReason: modelResult.fallbackReason || undefined
       },
-      degradedMode: modelResult.provider === 'deterministic_fallback'
+      degradedMode: modelResult.provider === 'deterministic_engine' || modelResult.provider === 'deterministic_fallback'
     };
   }
 }
