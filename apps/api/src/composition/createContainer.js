@@ -87,6 +87,10 @@ export function createContainer() {
   return {
     airQualityController,
     recommendationController,
-    indoorController
+    indoorController,
+    createRecommendationUseCase,
+    reviseRecommendationUseCase,
+    getAirEvidenceUseCase,
+    getIndoorGuidanceUseCase
   };
 }

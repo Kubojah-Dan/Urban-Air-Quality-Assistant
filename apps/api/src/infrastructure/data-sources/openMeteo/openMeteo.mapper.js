@@ -82,6 +82,36 @@ export function mapOpenMeteoToRecords(raw, isEurope = false) {
     });
   }
 
+  // Include hourly PM2.5 forecast sequence points for the day-strip timeline
+  if (raw.hourly?.time && Array.isArray(raw.hourly.pm2_5)) {
+    const nowMs = new Date().getTime();
+    let count = 0;
+    for (let i = 0; i < raw.hourly.time.length && count < 8; i++) {
+      const forecastTime = new Date(raw.hourly.time[i]).getTime();
+      // Include current and upcoming hourly forecast records
+      if (forecastTime >= nowMs - 3600000) {
+        const val = raw.hourly.pm2_5[i];
+        if (typeof val === 'number') {
+          records.push({
+            id: `om_${modelId}_pm25_h${i}_${forecastTime}`,
+            provider: 'open-meteo',
+            recordKind: 'forecast',
+            modelId,
+            pollutant: 'PM2.5',
+            value: val,
+            unit: 'µg/m³',
+            validAt: new Date(raw.hourly.time[i]).toISOString(),
+            retrievedAt: retrievedTime,
+            coverage,
+            qualityFlags: ['valid'],
+            attribution
+          });
+          count++;
+        }
+      }
+    }
+  }
+
   return records;
 }
 

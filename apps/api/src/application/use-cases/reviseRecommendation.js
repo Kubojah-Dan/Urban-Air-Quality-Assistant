@@ -5,7 +5,7 @@ export class ReviseRecommendationUseCase {
     this.createRecommendationUseCase = createRecommendationUseCase;
   }
 
-  async execute(baseline, modifiedConstraint, currentCandidates, locationContext) {
+  async execute(baseline, modifiedConstraint, currentCandidates, locationContext, options = {}) {
     // Perform scoped revision
     const revisedCandidates = applyScopedConstraintRevision(currentCandidates, modifiedConstraint);
     const updatedBaseline = {
@@ -13,7 +13,11 @@ export class ReviseRecommendationUseCase {
       constraints: [...(baseline.constraints || []), modifiedConstraint]
     };
 
-    const fullResult = await this.createRecommendationUseCase.execute(updatedBaseline, locationContext);
+    const fullResult = await this.createRecommendationUseCase.execute(
+      updatedBaseline,
+      locationContext,
+      options
+    );
     return {
       ...fullResult,
       candidates: {
@@ -21,7 +25,7 @@ export class ReviseRecommendationUseCase {
         recommended: revisedCandidates.recommended,
         backup: revisedCandidates.backup
       },
-      scopedRevisionLog: revisedCandidates.changeLog
+      scopedRevisionLog: [revisedCandidates.scopedChangeLog]
     };
   }
 }

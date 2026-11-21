@@ -11,10 +11,16 @@ export function AppRouter() {
     setCurrentPage('today');
   };
 
+  const handleBackToStart = () => {
+    setCurrentPage('start');
+  };
+
   return (
-    <main className="max-w-5xl mx-auto px-4 py-8">
+    <main className="max-w-6xl mx-auto px-4 py-6 sm:py-8">
       {currentPage === 'start' && <StartPage onStartPlan={handleStartPlan} />}
-      {currentPage === 'today' && <TodayPage initialContext={activeContext} />}
+      {currentPage === 'today' && (
+        <TodayPage initialContext={activeContext} onBackToStart={handleBackToStart} />
+      )}
     </main>
   );
 }

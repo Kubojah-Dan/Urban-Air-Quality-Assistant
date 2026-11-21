@@ -9,6 +9,22 @@ export const CITIES = [
   },
   {
     countryCode: 'IN',
+    cityId: 'coimbatore',
+    displayName: 'Coimbatore, Tamil Nadu, India',
+    latitude: 11.0168,
+    longitude: 76.9558,
+    timeZone: 'Asia/Kolkata'
+  },
+  {
+    countryCode: 'IN',
+    cityId: 'chennai',
+    displayName: 'Chennai, Tamil Nadu, India',
+    latitude: 13.0827,
+    longitude: 80.2707,
+    timeZone: 'Asia/Kolkata'
+  },
+  {
+    countryCode: 'IN',
     cityId: 'mumbai',
     displayName: 'Mumbai, India',
     latitude: 19.0760,
