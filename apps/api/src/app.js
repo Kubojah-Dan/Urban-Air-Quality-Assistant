@@ -19,7 +19,23 @@ export function createApp(container) {
   app.use(securityHeaders());
   app.use(
     cors({
-      origin: env.WEB_ORIGIN,
+      origin: (origin, callback) => {
+        // Allow mobile, CLI, or same-origin requests without Origin header
+        if (!origin) return callback(null, true);
+
+        // Allow configured origin, localhost dev servers, and all Vercel deployments (*.vercel.app)
+        if (
+          origin === env.WEB_ORIGIN ||
+          origin === 'http://localhost:5173' ||
+          origin === 'http://localhost:4173' ||
+          origin.endsWith('.vercel.app')
+        ) {
+          return callback(null, true);
+        }
+
+        // Permissive callback dynamically reflects the origin for CORS preflights
+        return callback(null, true);
+      },
       credentials: true
     })
   );
