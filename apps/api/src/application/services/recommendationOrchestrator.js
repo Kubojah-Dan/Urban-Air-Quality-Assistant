@@ -21,14 +21,19 @@ export class RecommendationOrchestrator {
     let modelResult = {
       provider: 'deterministic_engine',
       model: 'deterministic-rules-v1',
-      fallbackTriggered: false
+      fallbackTriggered: false,
+      degradedMode: true,
+      rankedCandidateIds: eligibleCandidates.map((c) => c.id),
+      reasonCodes: ['DETERMINISTIC_RULES_ENGINE'],
+      explanation: 'Options ranked using rule-based air quality heuristics and constraint satisfaction.'
     };
 
     if (!options.skipAi && this.modelRouter) {
       const modelInput = {
-        baselineId: baseline.id,
+        baseline,
         candidates: eligibleCandidates,
-        evidenceIds: evidenceBundle.records.map((r) => r.id)
+        evidenceIds: (evidenceBundle?.records || []).map((r) => r.id),
+        locationContext: evidenceBundle?.locationContext || { countryCode }
       };
       modelResult = await this.modelRouter.routeRecommendation(modelInput);
     }
@@ -121,6 +126,10 @@ export class RecommendationOrchestrator {
     return {
       baselineId: baseline.id,
       candidates: { usual, recommended, backup },
+      rankedCandidateIds: modelResult.rankedCandidateIds || eligibleCandidates.map((c) => c.id),
+      explanation: modelResult.explanation || null,
+      reasonCodes: modelResult.reasonCodes || [],
+      nextQuestion: modelResult.nextQuestion || null,
       impactReceipts: {
         receipt_usual: receiptUsual,
         receipt_recommended: receiptRecommended,
@@ -133,7 +142,9 @@ export class RecommendationOrchestrator {
         fallbackTriggered: modelResult.fallbackTriggered || false,
         fallbackReason: modelResult.fallbackReason || undefined
       },
-      degradedMode: modelResult.provider === 'deterministic_engine' || modelResult.provider === 'deterministic_fallback'
+      degradedMode:
+        modelResult.degradedMode ??
+        (modelResult.provider === 'deterministic_engine' || modelResult.provider === 'deterministic_fallback')
     };
   }
 }

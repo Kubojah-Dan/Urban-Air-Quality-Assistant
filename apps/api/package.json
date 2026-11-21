@@ -9,6 +9,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@dayshift/ai": "workspace:*",
     "@dayshift/contracts": "workspace:*",
     "@dayshift/data-sources": "workspace:*",
     "@dayshift/domain": "workspace:*",

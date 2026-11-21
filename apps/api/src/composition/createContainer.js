@@ -36,17 +36,20 @@ export function createContainer() {
   // 2. AI Providers & Router
   const geminiProvider = new GeminiProvider({
     apiKey: env.GEMINI_API_KEY,
-    model: env.GEMINI_MODEL
+    model: env.GEMINI_MODEL,
+    timeoutMs: env.MODEL_REQUEST_TIMEOUT_MS
   });
   const groqProvider = new GroqProvider({
     apiKey: env.GROQ_API_KEY,
-    model: env.GROQ_MODEL
+    model: env.GROQ_MODEL,
+    timeoutMs: env.MODEL_REQUEST_TIMEOUT_MS
   });
 
   const modelRouter = new ModelRouter({
     primaryProvider: geminiProvider,
     fallbackProvider: groqProvider,
-    enableFallback: env.AI_ENABLE_FALLBACK
+    enableFallback: env.AI_ENABLE_FALLBACK,
+    maxRetriesPerProvider: env.MODEL_MAX_RETRIES_PER_PROVIDER
   });
 
   // 3. Application Services

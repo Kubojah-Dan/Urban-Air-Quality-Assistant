@@ -29,6 +29,7 @@ const EnvSchema = z.object({
   GROQ_MODEL: z.string().default('openai/gpt-oss-120b'),
   MODEL_REQUEST_TIMEOUT_MS: z.coerce.number().default(12000),
   MODEL_MAX_OUTPUT_TOKENS: z.coerce.number().default(1200),
+  MODEL_MAX_RETRIES_PER_PROVIDER: z.coerce.number().default(1),
   OPEN_METEO_BASE_URL: z.string().default('https://air-quality-api.open-meteo.com/v1/air-quality'),
   AIRNOW_API_KEY: z.string().optional(),
   CPCB_API_KEY: z.string().optional(),
