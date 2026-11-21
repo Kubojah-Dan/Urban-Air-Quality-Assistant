@@ -4,7 +4,9 @@ node_modules/
 
 # Build artifacts
 dist/
+**/dist/
 build/
+**/build/
 .cache/
 
 # Environment files - never commit secrets
@@ -31,3 +33,6 @@ pnpm-debug.log*
 # Development
 PHASE.md
 PROMPT.md
+
+# Temporary templates & design reference
+project (1)/

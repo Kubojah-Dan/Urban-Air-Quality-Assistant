@@ -1,6 +1,15 @@
 import React, { useState } from 'react';
-import { Leaf, Info, ChevronDown, ChevronUp, Shield, Factory, Wind } from 'lucide-react';
+import { Leaf, Info, ChevronDown, ChevronUp, Shield, Factory, Wind, Sparkles } from 'lucide-react';
 
+/**
+ * ImpactReceipt
+ *
+ * Screen E component: The signature analytical report with 3 separate channels:
+ * - Channel 1: Outdoor Air Context (ambient concentration vs inhaled dose boundary)
+ * - Channel 2: Indoor Action Mechanism (source control, filtration, ventilation)
+ * - Channel 3: Emissions Estimate (tailpipe CO2/PM delta from ARAI 2024 / EPA MOVES 2024)
+ * Adaptive crystal-clear contrast in both Light & Dark modes.
+ */
 export function ImpactReceipt({ receipt }) {
   const [showDetails, setShowDetails] = useState(false);
 
@@ -9,70 +18,70 @@ export function ImpactReceipt({ receipt }) {
   const { outdoorContext, indoorAction, emissionsEstimate, assumptions = [], unknowns = [] } = receipt;
 
   return (
-    <div className="bg-stone-50 border border-stone-200/90 rounded-xl p-3.5 space-y-3 text-xs">
+    <div className="p-4 sm:p-5 rounded-[24px] bg-slate-100/90 dark:bg-white/5 border border-slate-200 dark:border-white/10 space-y-3.5 text-xs">
       {/* Header */}
-      <div className="flex items-center justify-between pb-2 border-b border-stone-200">
-        <div className="flex items-center gap-1.5 font-bold text-stone-900">
-          <Leaf className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+      <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-white/10">
+        <div className="flex items-center gap-2 font-extrabold text-slate-900 dark:text-white font-display">
+          <Leaf className="w-4 h-4 text-cyber-teal flex-shrink-0" />
           <span>Impact Receipt</span>
         </div>
-        <span className="text-[10px] bg-stone-200/70 text-stone-700 px-2 py-0.5 rounded-full font-medium">
-          3 Separate Channels
+        <span className="text-[10px] bg-slate-200 dark:bg-white/10 text-slate-700 dark:text-cyber-text-secondary px-2.5 py-0.5 rounded-full font-bold border border-slate-300 dark:border-white/15">
+          3 Independent Channels
         </span>
       </div>
 
       <div className="space-y-2.5">
         {/* Channel 1: Outdoor Context */}
-        <div className="p-2.5 bg-white rounded-lg border border-stone-200/70 space-y-1">
-          <div className="flex items-center gap-1 text-[11px] font-bold text-stone-700">
-            <Wind className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
+        <div className="p-3 bg-white dark:bg-black/40 rounded-2xl border border-slate-200 dark:border-white/5 space-y-1 shadow-xs">
+          <div className="flex items-center gap-1.5 text-[11px] font-bold text-cyber-blue">
+            <Wind className="w-3.5 h-3.5 flex-shrink-0" />
             <span>Channel 1: Outdoor Air Context</span>
           </div>
-          <p className="text-stone-800 font-medium">
+          <p className="text-slate-900 dark:text-white font-bold">
             {outdoorContext?.windowDescription || 'Scheduled Activity Window'}
           </p>
-          <p className="text-[11px] text-stone-500">
-            Pollutant Context: {outdoorContext?.pollutant} ({Math.round(outdoorContext?.value || 0)} {outdoorContext?.unit})
+          <p className="text-[11px] text-slate-600 dark:text-cyber-text-secondary">
+            Ambient Pollutant: {outdoorContext?.pollutant} ({Math.round(outdoorContext?.value || 0)} {outdoorContext?.unit})
           </p>
-          <p className="text-[10px] text-stone-400 italic">
-            Boundary: Ambient outdoor concentration is not converted to personal inhaled dose.
+          <p className="text-[10px] text-slate-500 dark:text-cyber-text-muted italic">
+            Boundary: Ambient outdoor concentration is not an individual's personal inhaled dose.
           </p>
         </div>
 
         {/* Channel 2: Indoor Mechanism */}
-        <div className="p-2.5 bg-white rounded-lg border border-stone-200/70 space-y-1">
-          <div className="flex items-center gap-1 text-[11px] font-bold text-stone-700">
-            <Shield className="w-3.5 h-3.5 text-brand-600 flex-shrink-0" />
-            <span>Channel 2: Indoor Action Mechanism</span>
+        <div className="p-3 bg-white dark:bg-black/40 rounded-2xl border border-slate-200 dark:border-white/5 space-y-1 shadow-xs">
+          <div className="flex items-center gap-1.5 text-[11px] font-bold text-cyber-teal">
+            <Shield className="w-3.5 h-3.5 flex-shrink-0" />
+            <span>Channel 2: Indoor / In-Cabin Mechanism</span>
           </div>
-          <p className="text-stone-800 font-medium">{indoorAction?.actionTitle || 'Indoor Source Control'}</p>
-          <span className="inline-block text-[10px] bg-stone-100 text-stone-600 px-1.5 py-0.5 rounded uppercase font-semibold">
-            Mechanism: {indoorAction?.mechanism?.replace('_', ' ') || 'source control'}
+          <p className="text-slate-900 dark:text-white font-bold">{indoorAction?.actionTitle || 'Indoor Source Control'}</p>
+          <span className="inline-block text-[10px] bg-cyber-teal text-slate-950 px-2 py-0.5 rounded-md uppercase font-black font-display">
+            Mechanism: {indoorAction?.mechanism?.replace(/_/g, ' ') || 'source control'}
           </span>
           {indoorAction?.avoidWhen?.length > 0 && (
-            <p className="text-[10px] text-amber-700 mt-1">
+            <p className="text-[10px] text-cyber-amber font-semibold mt-1">
               <strong>Avoid when:</strong> {indoorAction.avoidWhen.join(', ')}
             </p>
           )}
         </div>
 
         {/* Channel 3: Emissions Estimate */}
-        <div className="p-2.5 bg-white rounded-lg border border-stone-200/70 space-y-1">
-          <div className="flex items-center gap-1 text-[11px] font-bold text-stone-700">
-            <Factory className="w-3.5 h-3.5 text-stone-600 flex-shrink-0" />
+        <div className="p-3 bg-white dark:bg-black/40 rounded-2xl border border-slate-200 dark:border-white/5 space-y-1 shadow-xs">
+          <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-700 dark:text-cyber-text-secondary">
+            <Factory className="w-3.5 h-3.5 flex-shrink-0" />
             <span>Channel 3: Emissions Estimate</span>
           </div>
           {emissionsEstimate?.status === 'estimated' ? (
             <div>
-              <p className="text-emerald-700 font-bold text-sm">
+              <p className="text-cyber-teal font-extrabold text-sm font-display">
                 ~{emissionsEstimate.estimatedTailpipeCo2GramsSaved}g avoided tailpipe CO₂
               </p>
-              <p className="text-[10px] text-stone-500 mt-0.5">
+              <p className="text-[10px] text-slate-600 dark:text-cyber-text-secondary mt-0.5">
                 Basis: {emissionsEstimate.basis} • Factor Vintage: {emissionsEstimate.factorVintage || 'ARAI 2024'} ({emissionsEstimate.calculationBoundary})
               </p>
             </div>
           ) : (
-            <p className="text-stone-500 italic text-[11px]">
+            <p className="text-slate-500 dark:text-cyber-text-muted italic text-[11px]">
               {emissionsEstimate?.note || 'Not estimated: reference travel baseline.'}
             </p>
           )}
@@ -84,31 +93,32 @@ export function ImpactReceipt({ receipt }) {
         <button
           type="button"
           onClick={() => setShowDetails(!showDetails)}
-          className="flex items-center justify-between w-full text-[11px] text-stone-600 hover:text-stone-900 font-semibold focus:outline-none focus-visible:underline cursor-pointer"
+          className="flex items-center justify-between w-full text-[11px] text-slate-600 dark:text-cyber-text-secondary hover:text-slate-900 dark:hover:text-white font-semibold focus:outline-none focus-visible:underline cursor-pointer"
         >
-          <span className="flex items-center gap-1">
-            <Info className="w-3.5 h-3.5 text-stone-400" />
+          <span className="flex items-center gap-1.5">
+            <Info className="w-3.5 h-3.5 text-slate-400 dark:text-cyber-text-muted" />
             <span>Scientific Assumptions & Unknowns ({assumptions.length + unknowns.length})</span>
           </span>
           {showDetails ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
         </button>
 
         {showDetails && (
-          <div className="mt-2 p-2.5 bg-white rounded-lg border border-stone-200 space-y-2 text-[11px] text-stone-600">
+          <div className="mt-2 p-3 bg-slate-50 dark:bg-black/50 rounded-2xl border border-slate-200 dark:border-white/10 space-y-2 text-[11px] text-slate-600 dark:text-cyber-text-secondary shadow-xs">
             {assumptions.length > 0 && (
               <div>
-                <span className="font-bold text-stone-700 block mb-0.5">Assumptions:</span>
-                <ul className="list-disc pl-4 space-y-0.5">
+                <span className="font-bold text-slate-900 dark:text-white block mb-0.5">Scientific Assumptions:</span>
+                <ul className="list-disc list-inside space-y-0.5">
                   {assumptions.map((a, i) => (
                     <li key={i}>{a}</li>
                   ))}
                 </ul>
               </div>
             )}
+
             {unknowns.length > 0 && (
               <div>
-                <span className="font-bold text-stone-700 block mb-0.5">Known Unknowns:</span>
-                <ul className="list-disc pl-4 space-y-0.5 text-stone-500">
+                <span className="font-bold text-slate-900 dark:text-white block mb-0.5">Explicit Unknowns:</span>
+                <ul className="list-disc list-inside space-y-0.5">
                   {unknowns.map((u, i) => (
                     <li key={i}>{u}</li>
                   ))}
@@ -117,11 +127,6 @@ export function ImpactReceipt({ receipt }) {
             )}
           </div>
         )}
-      </div>
-
-      <div className="text-[10px] text-stone-400 flex items-center gap-1 pt-1 border-t border-stone-200/60">
-        <Info className="w-3 h-3 flex-shrink-0" />
-        <span>Channels are independent and never combined into a single synthetic score.</span>
       </div>
     </div>
   );

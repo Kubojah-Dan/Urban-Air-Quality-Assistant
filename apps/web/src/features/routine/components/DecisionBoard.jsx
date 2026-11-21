@@ -12,9 +12,9 @@ export function DecisionBoard({
 }) {
   if (!candidates) {
     return (
-      <div className="bg-white border border-stone-200 rounded-2xl p-8 text-center space-y-2">
-        <h3 className="font-bold text-stone-800 text-base">No Active Routine Plan Yet</h3>
-        <p className="text-xs text-stone-500 max-w-md mx-auto">
+      <div className="cyber-card rounded-[32px] p-8 text-center space-y-2">
+        <h3 className="font-bold text-white text-base font-display">No Active Routine Plan Yet</h3>
+        <p className="text-xs text-cyber-text-secondary max-w-md mx-auto">
           Submit your commute details or quick context above to generate the 3-option decision board.
         </p>
       </div>
@@ -32,19 +32,20 @@ export function DecisionBoard({
   return (
     <section className="space-y-4" aria-label="Today’s Decision Board">
       {/* Section Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-1">
         <div>
-          <span className="text-[11px] font-bold uppercase tracking-wider text-stone-500 block">
+          <span className="text-[10px] font-extrabold uppercase tracking-widest text-cyber-teal font-display block">
             Core Decision Interface
           </span>
-          <h2 className="text-xl font-extrabold text-stone-900 tracking-tight">
+          <h2 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight font-display">
             Today’s 3-Way Decision Board
           </h2>
         </div>
-        <div className="flex items-center gap-1.5 self-start sm:self-auto text-xs text-stone-500 bg-stone-100 px-2.5 py-1 rounded-full">
-          <span>{providerLabel}</span>
+        <div className="flex items-center gap-1.5 self-start sm:self-auto text-xs text-cyber-text-secondary bg-white/5 px-3 py-1 rounded-full border border-white/10">
+          <Sparkles className="w-3.5 h-3.5 text-cyber-purple" />
+          <span className="text-white text-[11px]">{providerLabel}</span>
           {modelInfo?.fallbackTriggered && (
-            <span className="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded font-semibold">
+            <span className="text-[10px] bg-cyber-amber/20 text-cyber-amber px-1.5 py-0.2 rounded font-semibold">
               Failover Active
             </span>
           )}
@@ -53,18 +54,18 @@ export function DecisionBoard({
 
       {/* AI Contextual Explanation Banner */}
       {explanation && (
-        <div className="p-4 bg-stone-50 border border-stone-200 rounded-xl space-y-2">
-          <div className="flex items-center gap-1.5 text-xs font-bold text-stone-800">
-            <Sparkles className="w-4 h-4 text-brand-600 flex-shrink-0" />
-            <span>Contextual AI Trade-off Analysis</span>
+        <div className="p-5 cyber-card rounded-[28px] space-y-2 border-cyber-teal/30">
+          <div className="flex items-center gap-2 text-xs font-bold text-white">
+            <Sparkles className="w-4 h-4 text-cyber-teal flex-shrink-0" />
+            <span className="font-display">Contextual AI Trade-off Analysis</span>
           </div>
-          <p className="text-xs text-stone-700 leading-relaxed">{explanation}</p>
+          <p className="text-xs text-cyber-text-secondary leading-relaxed">{explanation}</p>
           {reasonCodes.length > 0 && (
             <div className="flex flex-wrap gap-1.5 pt-1">
               {reasonCodes.map((code, idx) => (
                 <span
                   key={idx}
-                  className="text-[10px] bg-stone-200/80 text-stone-700 font-semibold px-2 py-0.5 rounded-md"
+                  className="text-[10px] bg-white/10 text-white font-semibold px-2.5 py-0.5 rounded-full border border-white/15"
                 >
                   {code.replace(/_/g, ' ')}
                 </span>
@@ -76,11 +77,11 @@ export function DecisionBoard({
 
       {/* Degraded Mode Notice */}
       {degradedMode && (
-        <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-2 text-xs text-amber-800">
-          <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-amber-600" />
+        <div className="p-4 bg-cyber-amber/15 border border-cyber-amber/30 rounded-[28px] flex items-start gap-2.5 text-xs text-white">
+          <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-cyber-amber" />
           <div>
             <span className="font-bold block">Operating in Verified Deterministic Mode</span>
-            <span className="text-[11px] text-amber-700 leading-relaxed block">
+            <span className="text-[11px] text-cyber-text-secondary leading-relaxed block">
               AI ranking providers were unreachable or timed out. Options are ordered using deterministic
               feasibility rules and regional CAMS air data without compromising safety.
             </span>

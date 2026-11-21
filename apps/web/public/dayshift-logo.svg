@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 820" role="img" aria-labelledby="title desc">
+  <title id="title">DayShift logo</title>
+  <desc id="desc">A frosted blue glass letter D with a flowing teal leaf-like breeze and a warm amber sun, above the DayShift wordmark.</desc>
+  <defs>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#79B4FF" stop-opacity=".92"/><stop offset=".42" stop-color="#D9E9FF" stop-opacity=".88"/><stop offset="1" stop-color="#8FBFFF" stop-opacity=".76"/></linearGradient>
+    <linearGradient id="glassEdge" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".48" stop-color="#A9CFFF"/><stop offset="1" stop-color="#FFFFFF"/></linearGradient>
+    <linearGradient id="leaf" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#B8F18B"/><stop offset=".45" stop-color="#36CFAF"/><stop offset="1" stop-color="#087F86"/></linearGradient>
+    <linearGradient id="breeze" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#FFFFFF" stop-opacity=".96"/><stop offset=".5" stop-color="#D9F2F0" stop-opacity=".88"/><stop offset="1" stop-color="#FFFFFF" stop-opacity=".65"/></linearGradient>
+    <radialGradient id="sun" cx="35%" cy="30%" r="75%"><stop offset="0" stop-color="#FFE98B"/><stop offset=".58" stop-color="#FFC84F"/><stop offset="1" stop-color="#F39B27"/></radialGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="170%"><feGaussianBlur in="SourceAlpha" stdDeviation="13" result="blur"/><feOffset dy="15" result="offset"/><feColorMatrix in="offset" type="matrix" values="0 0 0 0 .12 0 0 0 0 .25 0 0 0 0 .42 0 0 0 .25 0" result="shade"/><feMerge><feMergeNode in="shade"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <filter id="glow" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="24"/></filter>
+  </defs>
+  <circle cx="790" cy="180" r="91" fill="#FFD56A" opacity=".22" filter="url(#glow)"/><circle cx="790" cy="180" r="67" fill="url(#sun)"/>
+  <g filter="url(#shadow)">
+    <path d="M365 125 Q365 105 387 105 H565 C710 105 805 194 805 330 C805 466 710 555 565 555 H387 Q365 555 365 533 Z M455 220 V440 H560 C635 440 680 397 680 330 C680 263 635 220 560 220 Z" fill="url(#glass)" fill-rule="evenodd" stroke="url(#glassEdge)" stroke-width="7" stroke-linejoin="round"/>
+    <path d="M382 127 Q382 119 393 119 H560 C678 119 765 185 785 284 C738 221 674 200 580 200 H455 V450 C405 450 382 426 382 390 Z" fill="#FFFFFF" opacity=".22"/>
+    <path d="M455 220 V540" stroke="#FFFFFF" stroke-opacity=".72" stroke-width="4"/>
+  </g>
+  <path d="M455 535 C540 535 580 495 620 435 C668 364 738 335 820 319 C774 367 724 394 675 420 C620 450 600 520 530 548 C505 558 478 558 455 555 Z" fill="url(#leaf)" stroke="#C9FFF0" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M455 535 C548 515 579 459 627 411 C674 365 738 345 805 331 C740 380 684 401 641 448 C600 493 578 542 520 551 L455 555 Z" fill="url(#breeze)" opacity=".9"/>
+  <path d="M472 543 C566 516 590 460 641 418 C683 384 731 365 786 348" fill="none" stroke="#FFFFFF" stroke-opacity=".78" stroke-width="4" stroke-linecap="round"/>
+  <text x="600" y="735" text-anchor="middle" font-family="Manrope, Inter, 'Segoe UI', Arial, sans-serif" font-size="150" font-weight="700" letter-spacing="-8" fill="#20283C">DayShift</text>
+  <path d="M895 605 C900 577 923 561 950 557 C946 584 926 604 895 605 Z" fill="url(#leaf)"/>
+</svg>

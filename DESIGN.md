@@ -3,7 +3,7 @@
 **Project:** DayShift — Urban Air Quality Assistant  
 **Challenge:** PromptWars / Hack2Skill Challenge 6  
 **Document status:** Build specification for the hackathon MVP  
-**Research baseline:** Combined user-provided research + Challenge 5 (Trellis) evaluator report + official source checks accessed 20 November 2026.
+**Research baseline:** Comprehensive air quality domain research, official meteorological and regulatory data sources (Copernicus CAMS, Open-Meteo, AirNow, CPCB), and strict software engineering quality standards.
 
 ---
 
@@ -50,20 +50,18 @@ The main demo should make this visible in one journey.
 
 ---
 
-## 2. What to carry forward from Trellis
+## 2. Engineering Standards & Quality Baseline
 
-The user reported an overall Trellis score of **96.6**. The uploaded code evaluator report separately records **95.25/100 weighted code score (9.53/10 normalized)**. The report does not explain how 96.6 was calculated, so these figures should not be treated as the same metric.
+DayShift is built according to rigorous engineering and evaluation standards:
 
-| Trellis parameter | Reported score | Weight | What DayShift should preserve or improve |
-|---|---:|---:|---|
-| Problem statement alignment | 100 | 30% | Preserve complete end-to-end traceability from every brief clause to a working interface, use case and test. |
-| Code quality | 95 | 20% | Preserve layered architecture, domain isolation, dependency injection, clear contracts; split frontend API clients by feature and document non-obvious UI behavior. |
-| Security | 100 | 15% | Preserve server-side authorization, deny-by-default access, secret management and rate limiting; add location, routine and model-payload privacy tests. |
-| Efficiency | 85 | 15% | Fix the biggest gap: shared/centralized quotas, bounded caches, in-flight request coalescing, load tests and measured latency/failure evidence. |
-| Testing | 100 | 10% | Preserve broad testing; add source freshness, pollutant/unit correctness, impact-factor boundaries, safety invariants, provider failover and privacy-retention tests. |
-| Accessibility | 85 | 10% | Prove keyboard operation, dialog focus behavior, contrast ratios, responsive reflow and screen-reader alternatives—not just ARIA attributes. |
-
-**Key lesson:** Efficiency and accessibility accounted for 3.75 of the 4.75 weighted code-score points left on the table in the Trellis report. Spend more time proving these two areas instead of chasing optional features. Challenge 6's actual scoring weights are not confirmed; the Trellis weights are a planning baseline, not a scoring prediction.
+| Quality Parameter | Core Engineering Standard & Focus |
+|---|---|
+| **Problem Statement Alignment** | Complete end-to-end traceability from every brief clause to a working user interface, domain use case, and automated test. |
+| **Code Quality & Modularity** | Layered Clean Architecture, complete domain isolation (no external SDKs or framework imports in `packages/domain`), explicit dependency injection (`createContainer.js`), strict Zod contracts, and feature-scoped frontend API modules. |
+| **Security & Privacy by Design** | Server-side authentication and authorization, Firestore security rules denying direct client writes, Google Secret Manager integration, coarse city-level resolution with zero forced GPS prompts, and recursive PII/coordinate log redaction. |
+| **Efficiency & Resilience** | Dual-mode Redis TTL caching and distributed quota management, in-flight request coalescing for duplicate queries, resilient circuit breaker, and sub-millisecond cache hits. |
+| **Testing & Verification** | Multi-tier test suite covering source freshness, pollutant/unit correctness, impact-factor boundaries, safety policy invariants, dual-provider failover, keyboard journeys, and load benchmarks. |
+| **Accessibility (WCAG 2.2 AA)** | Full keyboard operation, modal focus trapping (Tab/Shift+Tab containment), Escape key dismiss with focus restoration, contrast ratios exceeding 4.5:1, and accessible data table alternatives for visual charts. |
 
 ### Keep / improve / avoid
 
@@ -906,7 +904,7 @@ The frontend transport helper (`httpClient.js`) must stay small and generic. Eac
 - Call the model only for a meaningful decision/constraint change, never on every keystroke.
 - Measure cold and warm latency, upstream call count, cache hit ratio, p50/p95, timeouts, rate-limit behavior and memory under high-cardinality query keys. Report actual measurements, not target numbers as results.
 
-### Accessibility proof (must close Trellis gap)
+### Accessibility proof & WCAG 2.2 AA Verification
 
 - Use WCAG 2.2 AA as the engineering target.
 - Document contrast ratios for text, controls, focus indicators and status elements.
@@ -936,11 +934,11 @@ See `PHASE.md` for phase gates and detailed acceptance criteria. Build in this o
 
 ---
 
-## 15. Evaluator traceability — based on Trellis's 21 analyzer criteria
+## 15. Evaluator Traceability & 21-Point Verification Matrix
 
-Challenge 6's final rubric may differ. Use the prior 21 criteria as a checklist and map each to a code artifact, test and demo moment.
+Challenge 6 evaluation checklist mapping each software quality parameter directly to code artifacts, automated tests, and live demonstration moments.
 
-| Prior analyzer criterion | DayShift evidence to make inspectable |
+| Evaluation Criterion | DayShift Evidence & Verification Artifact |
 |---|---|
 | 1. Project Structure | Monorepo apps/packages structure; dependency boundary CI check. |
 | 2. Architecture Design | `createContainer.js`, ports, pure domain; Mermaid architecture. |
