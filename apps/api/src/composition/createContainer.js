@@ -4,6 +4,7 @@ import { AirNowClient } from '../infrastructure/data-sources/airNow/airNow.clien
 import { AirNowAdapter } from '../infrastructure/data-sources/airNow/airNow.adapter.js';
 import { CpcbClient } from '../infrastructure/data-sources/cpcb/cpcb.client.js';
 import { CpcbAdapter } from '../infrastructure/data-sources/cpcb/cpcb.adapter.js';
+import { FirestorePreferenceRepository } from '../infrastructure/persistence/firestorePreferenceRepository.js';
 import { GeminiProvider } from '../infrastructure/ai/gemini.provider.js';
 import { GroqProvider } from '../infrastructure/ai/groq.provider.js';
 import { ModelRouter } from '../infrastructure/ai/modelRouter.js';
@@ -32,6 +33,7 @@ export function createContainer() {
   const cpcbAdapter = new CpcbAdapter(cpcbClient);
 
   const cacheStore = new RedisCacheStore();
+  const preferenceRepository = new FirestorePreferenceRepository();
 
   // 2. AI Providers & Router
   const geminiProvider = new GeminiProvider({
@@ -88,6 +90,7 @@ export function createContainer() {
     airQualityController,
     recommendationController,
     indoorController,
+    preferenceRepository,
     createRecommendationUseCase,
     reviseRecommendationUseCase,
     getAirEvidenceUseCase,

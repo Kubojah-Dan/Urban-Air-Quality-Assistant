@@ -37,7 +37,7 @@ export function createApp(container) {
   );
   apiRouter.use(createIndoorRoutes({ indoorController: container.indoorController }));
   apiRouter.use(createFeedbackRoutes());
-  apiRouter.use(createPreferencesRoutes());
+  apiRouter.use(createPreferencesRoutes({ preferenceRepository: container.preferenceRepository }));
 
   app.use('/api/v1', apiRouter);
 

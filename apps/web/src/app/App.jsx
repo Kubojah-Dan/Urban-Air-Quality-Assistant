@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import { AppProviders } from './providers.jsx';
 import { TopBar } from '../features/shared/components/TopBar.jsx';
@@ -7,12 +7,14 @@ import '../styles/globals.css';
 import '../styles/tokens.css';
 
 export function App() {
+  const [currentPage, setCurrentPage] = useState('start');
+
   return (
     <AppProviders>
-      <div className="min-h-screen flex flex-col">
-        <TopBar />
+      <div className="min-h-screen flex flex-col bg-stone-50/50">
+        <TopBar onOpenPrivacy={() => setCurrentPage('privacy')} />
         <div className="flex-1">
-          <AppRouter />
+          <AppRouter currentPage={currentPage} setCurrentPage={setCurrentPage} />
         </div>
       </div>
     </AppProviders>

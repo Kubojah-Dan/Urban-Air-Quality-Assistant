@@ -1,16 +1,55 @@
+const SENSITIVE_KEYS = new Set([
+  'prompt',
+  'userprompt',
+  'systemprompt',
+  'itinerary',
+  'coordinates',
+  'gps',
+  'latitude',
+  'longitude',
+  'address',
+  'streetaddress',
+  'apikey',
+  'token',
+  'authorization',
+  'secret',
+  'medical',
+  'diagnosis',
+  'diagnoses'
+]);
+
+function sanitizeMetadata(meta) {
+  if (!meta || typeof meta !== 'object') return meta;
+  if (Array.isArray(meta)) return meta.map(sanitizeMetadata);
+
+  const clean = {};
+  for (const [key, val] of Object.entries(meta)) {
+    if (SENSITIVE_KEYS.has(key.toLowerCase())) {
+      clean[key] = '[REDACTED]';
+    } else if (val && typeof val === 'object') {
+      clean[key] = sanitizeMetadata(val);
+    } else {
+      clean[key] = val;
+    }
+  }
+  return clean;
+}
+
 export const logger = {
   info: (msg, meta = {}) => {
-    // Redaction: Never log raw user prompts or precise GPS/addresses
-    const sanitized = { ...meta };
-    delete sanitized.prompt;
-    delete sanitized.itinerary;
-    delete sanitized.coordinates;
-    console.info(`[INFO] ${msg}`, Object.keys(sanitized).length ? sanitized : '');
+    const sanitized = sanitizeMetadata(meta);
+    console.info(`[INFO] ${msg}`, sanitized && Object.keys(sanitized).length ? sanitized : '');
   },
   warn: (msg, meta = {}) => {
-    console.warn(`[WARN] ${msg}`, meta);
+    const sanitized = sanitizeMetadata(meta);
+    console.warn(`[WARN] ${msg}`, sanitized && Object.keys(sanitized).length ? sanitized : '');
   },
   error: (msg, err = {}) => {
-    console.error(`[ERROR] ${msg}`, { message: err.message, stack: err.stack });
+    const errorDetails = {
+      message: err?.message || String(err),
+      status: err?.status,
+      stack: process.env.NODE_ENV === 'development' ? err?.stack : undefined
+    };
+    console.error(`[ERROR] ${msg}`, errorDetails);
   }
 };
