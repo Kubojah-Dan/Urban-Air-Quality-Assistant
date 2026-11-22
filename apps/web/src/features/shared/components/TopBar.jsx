@@ -30,11 +30,11 @@ export function TopBar({
   ];
 
   return (
-    <header className="cyber-nav sticky top-0 z-30 px-3 sm:px-6 py-2.5 mb-4 sm:mb-6 border-b border-slate-200 dark:border-cyber-border transition-colors">
-      <div className="max-w-7xl mx-auto flex items-center justify-between">
+    <header className="sticky top-2 sm:top-3 z-40 px-3 sm:px-6 transition-all duration-300">
+      <div className="max-w-6xl mx-auto rounded-2xl sm:rounded-3xl cyber-card-elevated border border-slate-200/90 dark:border-white/10 px-3 sm:px-5 py-2 sm:py-2.5 backdrop-blur-xl bg-white/90 dark:bg-[#101726]/90 shadow-xl flex items-center justify-between">
         {/* Brand logo & tagline */}
         <div
-          className="flex items-center gap-3 cursor-pointer group"
+          className="flex items-center gap-2.5 cursor-pointer group"
           onClick={() => onChangeTab && onChangeTab('landing')}
         >
           <img
@@ -45,6 +45,9 @@ export function TopBar({
           <div className="hidden sm:flex flex-col">
             <span className="text-[10px] font-extrabold uppercase tracking-widest text-cyber-teal font-display">
               Cleaner Air Choices
+            </span>
+            <span className="text-[9px] text-slate-500 dark:text-cyber-text-muted font-medium">
+              AI Urban Air Quality Assistant
             </span>
           </div>
         </div>

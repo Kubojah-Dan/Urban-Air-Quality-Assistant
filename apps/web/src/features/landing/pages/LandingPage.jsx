@@ -20,44 +20,31 @@ export function LandingPage({ onStartOnboarding, onExploreAirQuality }) {
       {/* =========================================================
           1. HERO SECTION: High Contrast, Glowing Accents, Clean Typography
           ========================================================= */}
-      <section className="relative overflow-hidden rounded-[32px] cyber-card-elevated p-6 sm:p-10 lg:p-14 text-center">
+      <section className="relative overflow-hidden rounded-[28px] sm:rounded-[32px] cyber-card-elevated p-5 sm:p-8 md:p-10 text-center">
         {/* Ambient atmospheric lighting */}
-        <div className="absolute -top-24 -left-24 w-80 h-80 rounded-full bg-cyber-teal/20 blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-24 -right-24 w-80 h-80 rounded-full bg-cyber-blue/20 blur-3xl pointer-events-none" />
+        <div className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-cyber-teal/15 blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-24 -right-24 w-72 h-72 rounded-full bg-cyber-blue/15 blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 max-w-4xl mx-auto space-y-6">
-          {/* Top Pill Badges */}
-          <div className="flex flex-wrap items-center justify-center gap-2">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-300 dark:border-white/10 text-slate-800 dark:text-white text-xs font-bold shadow-xs">
-              <img src="/dayshift-logo.svg" alt="DayShift" className="h-5 w-auto" />
-              <span>AI Urban Air Quality Assistant</span>
-            </div>
-
-            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-cyber-teal/15 text-cyber-teal border border-cyber-teal/30 text-xs font-bold">
-              <MapPin className="w-3.5 h-3.5" />
-              <span>All 28 Indian States & NCR Covered</span>
-            </div>
-          </div>
-
+        <div className="relative z-10 max-w-3xl mx-auto space-y-4 sm:space-y-5">
           {/* CRITICAL: High-contrast, 100% visible headline in both light and dark themes */}
-          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-white font-display leading-[1.15]">
+          <h1 className="text-2xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white font-display leading-tight sm:leading-[1.15]">
             Make every day a{' '}
             <span className="text-cyber-teal neon-text-teal">
               cleaner choice.
             </span>
           </h1>
 
-          <p className="text-base sm:text-lg text-slate-600 dark:text-cyber-text-secondary font-medium max-w-2xl mx-auto leading-relaxed">
+          <p className="text-xs sm:text-sm md:text-base text-slate-600 dark:text-cyber-text-secondary font-medium max-w-xl mx-auto leading-relaxed">
             Your day. Your choices. Cleaner air. DayShift delivers realistic, constraint-aware routine guidance,
             verifying what is known, estimated, and unmeasured without demanding continuous GPS or expensive equipment.
           </p>
 
           {/* Primary Action Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 pt-2">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 sm:gap-3.5 pt-1">
             <button
               type="button"
               onClick={onStartOnboarding}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl bg-cyber-teal text-slate-950 font-black text-sm shadow-cyber-glow-teal hover:opacity-95 transition-all cursor-pointer transform hover:-translate-y-0.5 active:translate-y-0"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 sm:px-7 sm:py-3.5 rounded-2xl bg-cyber-teal text-slate-950 font-black text-xs sm:text-sm shadow-cyber-glow-teal hover:opacity-95 transition-all cursor-pointer transform hover:-translate-y-0.5 active:translate-y-0"
             >
               <span>Build my daily routine</span>
               <ArrowRight className="w-4 h-4" />
@@ -66,37 +53,37 @@ export function LandingPage({ onStartOnboarding, onExploreAirQuality }) {
             <button
               type="button"
               onClick={onExploreAirQuality}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/15 text-slate-900 dark:text-white font-bold text-sm border border-slate-300 dark:border-white/15 transition-all cursor-pointer shadow-xs"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 sm:px-7 sm:py-3.5 rounded-2xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/15 text-slate-900 dark:text-white font-bold text-xs sm:text-sm border border-slate-300 dark:border-white/15 transition-all cursor-pointer shadow-xs"
             >
               <Compass className="w-4 h-4 text-cyber-blue" />
               <span>Explore air quality</span>
             </button>
           </div>
 
-          {/* Feature Showcase Banner (Indian Clean Commute Image) */}
-          <div className="pt-6">
-            <div className="relative aspect-[21/9] sm:aspect-[2.4/1] w-full rounded-[28px] overflow-hidden border border-slate-300 dark:border-white/15 shadow-2xl group">
+          {/* Feature Showcase Banner (Indian Clean Commute Image - Uncompressed, Clean Ratio) */}
+          <div className="pt-3 sm:pt-5">
+            <div className="relative w-full h-44 sm:h-64 md:h-72 rounded-2xl sm:rounded-3xl overflow-hidden border border-slate-300 dark:border-white/15 shadow-xl group">
               <img
                 src="/assets/indian-clean-commute.jpg"
                 alt="Modern Clean Urban Mobility in India — Electric Metro & Clean Transit"
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent flex flex-col justify-end p-5 sm:p-8 text-left">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div className="space-y-1">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-cyber-teal bg-black/60 px-2.5 py-1 rounded-full border border-cyber-teal/30">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent flex flex-col justify-end p-4 sm:p-6 text-left">
+                <div className="flex flex-wrap items-center justify-between gap-2.5">
+                  <div className="space-y-0.5">
+                    <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-cyber-teal bg-black/60 px-2.5 py-0.5 rounded-full border border-cyber-teal/30">
                       Urban Transit Model
                     </span>
-                    <h3 className="text-lg sm:text-2xl font-extrabold text-white font-display">
+                    <h3 className="text-base sm:text-xl font-extrabold text-white font-display">
                       Clean Commuting for Modern Indian Metros
                     </h3>
-                    <p className="text-xs text-slate-200 max-w-xl hidden sm:block">
+                    <p className="text-[11px] sm:text-xs text-slate-200 max-w-lg hidden sm:block">
                       Combining electric buses, metro rail networks, and departure time shifting to avoid peak morning temperature inversions.
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-2 bg-black/70 backdrop-blur-md p-2.5 rounded-2xl border border-white/15 text-xs text-white">
-                    <span className="w-2.5 h-2.5 rounded-full bg-cyber-teal animate-pulse" />
+                  <div className="flex items-center gap-1.5 bg-black/70 backdrop-blur-md px-2.5 py-1.5 rounded-xl border border-white/15 text-[11px] sm:text-xs text-white">
+                    <span className="w-2 h-2 rounded-full bg-cyber-teal animate-pulse" />
                     <span className="font-bold">ARAI 2024 Verified</span>
                   </div>
                 </div>
@@ -105,19 +92,19 @@ export function LandingPage({ onStartOnboarding, onExploreAirQuality }) {
           </div>
 
           {/* Privacy & Provenance Guarantees */}
-          <div className="pt-2 flex flex-wrap items-center justify-center gap-4 text-xs font-semibold text-slate-600 dark:text-cyber-text-secondary">
+          <div className="pt-1 flex flex-wrap items-center justify-center gap-3 sm:gap-4 text-[11px] sm:text-xs font-semibold text-slate-600 dark:text-cyber-text-secondary">
             <span className="flex items-center gap-1.5 text-slate-800 dark:text-white">
-              <ShieldCheck className="w-4 h-4 text-cyber-teal" />
+              <ShieldCheck className="w-3.5 h-3.5 text-cyber-teal" />
               Zero continuous GPS tracking
             </span>
             <span className="hidden sm:inline text-slate-300 dark:text-white/20">•</span>
             <span className="flex items-center gap-1.5 text-slate-800 dark:text-white">
-              <CheckCircle2 className="w-4 h-4 text-cyber-blue" />
+              <CheckCircle2 className="w-3.5 h-3.5 text-cyber-blue" />
               ARAI 2024 & EPA MOVES factors
             </span>
             <span className="hidden sm:inline text-slate-300 dark:text-white/20">•</span>
             <span className="flex items-center gap-1.5 text-slate-800 dark:text-white">
-              <Sparkles className="w-4 h-4 text-cyber-purple" />
+              <Sparkles className="w-3.5 h-3.5 text-cyber-purple" />
               DPDP Act 2023 compliant
             </span>
           </div>

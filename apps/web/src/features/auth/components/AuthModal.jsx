@@ -72,6 +72,9 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess, promptMessage }) {
     if (code === 'auth/popup-closed-by-user') {
       return 'Google sign-in popup was closed before completion.';
     }
+    if (code === 'auth/invalid-api-key' || code === 'auth/api-key-not-valid') {
+      return 'Firebase Web API Key is missing or invalid. Please configure VITE_FIREBASE_API_KEY in your .env file.';
+    }
     if (code === 'auth/invalid-email') {
       return 'Please enter a valid email address.';
     }
