@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { CircularAqiGauge } from '../../forecast/components/CircularAqiGauge.jsx';
 import { AirTrendWaveChart } from '../../forecast/components/AirTrendWaveChart.jsx';
 import { PollutantTimeline } from '../../forecast/components/PollutantTimeline.jsx';
+import { ActivityPlanner } from '../../forecast/components/ActivityPlanner.jsx';
+import { RouteComparison } from '../components/RouteComparison.jsx';
 import { RoutineInputForm } from '../components/RoutineInputForm.jsx';
 import { DecisionBoard } from '../components/DecisionBoard.jsx';
 import { EvidenceDisclosure } from '../../impact/components/EvidenceDisclosure.jsx';
@@ -273,6 +275,9 @@ export function TodayPage({ initialContext, onBackToStart }) {
             isRevising={isPlanLoading}
           />
 
+          {/* Air-Aware Route Comparison (Feature Six) */}
+          <RouteComparison selectedCity={location.displayName} />
+
           {/* Scientific Assumptions Disclosure */}
           <EvidenceDisclosure />
         </div>
@@ -286,13 +291,20 @@ export function TodayPage({ initialContext, onBackToStart }) {
         />
       )}
 
-      {/* Tab 3: Forecast Day-Strip */}
+      {/* Tab 3: Forecast Day-Strip & Activity Planner */}
       {activeTab === 'forecast' && (
-        <div className="cyber-card p-6 sm:p-7 rounded-[32px] space-y-4">
-          <PollutantTimeline
-            evidenceRecords={evidenceBundle?.records || []}
-            pollutant="PM2.5"
-            unit="μg/m³"
+        <div className="space-y-6">
+          <div className="cyber-card p-6 sm:p-7 rounded-[32px] space-y-4">
+            <PollutantTimeline
+              evidenceRecords={evidenceBundle?.records || []}
+              pollutant="PM2.5"
+              unit="μg/m³"
+            />
+          </div>
+
+          <ActivityPlanner
+            records={evidenceBundle?.records || []}
+            selectedCity={location.displayName}
           />
         </div>
       )}

@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import { AppProviders } from './providers.jsx';
+import { AssistantProvider } from '../features/assistant/context/AssistantContext.jsx';
+import { DayShiftAiOrb } from '../features/assistant/components/DayShiftAiOrb.jsx';
+import { GlobalAiChatDrawer } from '../features/assistant/components/GlobalAiChatDrawer.jsx';
 import { TopBar } from '../features/shared/components/TopBar.jsx';
 import { BottomNav } from '../features/shared/components/BottomNav.jsx';
 import { Footer } from '../features/shared/components/Footer.jsx';
@@ -115,80 +118,91 @@ export function App() {
 
   return (
     <AppProviders>
-      <div className="min-h-screen flex flex-col selection:bg-cyber-teal selection:text-slate-950 pb-20 md:pb-6 transition-colors duration-300">
-        {/* Inactivity Session Timeout Toast */}
-        {sessionTimeoutNotice && (
-          <div className="bg-amber-500 text-slate-950 px-4 py-2.5 text-xs font-bold flex items-center justify-between shadow-lg sticky top-0 z-50 animate-in fade-in">
-            <div className="flex items-center gap-2 max-w-7xl mx-auto flex-1">
-              <Clock className="w-4 h-4 shrink-0" />
-              <span>Security notice: You were automatically logged out after 15 minutes of inactivity.</span>
+      <AssistantProvider>
+        <div className="min-h-screen flex flex-col selection:bg-cyber-teal selection:text-slate-950 pb-20 md:pb-6 transition-colors duration-300 relative">
+          {/* Inactivity Session Timeout Toast */}
+          {sessionTimeoutNotice && (
+            <div className="bg-amber-500 text-slate-950 px-4 py-2.5 text-xs font-bold flex items-center justify-between shadow-lg sticky top-0 z-50 animate-in fade-in">
+              <div className="flex items-center gap-2 max-w-7xl mx-auto flex-1">
+                <Clock className="w-4 h-4 shrink-0" />
+                <span>Security notice: You were automatically logged out after 15 minutes of inactivity.</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSessionTimeoutNotice(false)}
+                className="p-1 hover:bg-black/10 rounded-lg cursor-pointer"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={() => setSessionTimeoutNotice(false)}
-              className="p-1 hover:bg-black/10 rounded-lg cursor-pointer"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        )}
+          )}
 
-        {/* Futuristic TopBar */}
-        <TopBar
-          activeTab={currentPage}
-          onChangeTab={setCurrentPage}
-          selectedCity={activeContext?.city?.displayName || 'Delhi, India'}
-          selectedCityObject={activeContext?.city}
-          onSelectCity={(city) => {
-            setActiveContext((prev) => ({
-              ...prev,
-              city
-            }));
-          }}
-          theme={theme}
-          onToggleTheme={handleToggleTheme}
-          currentUser={currentUser}
-          onOpenAuth={() => {
-            setAuthPromptMessage(null);
-            setIsAuthOpen(true);
-          }}
-          onSignOut={handleSignOut}
-          onOpenPrivacy={() => setCurrentPage('privacy')}
-        />
-
-        {/* Dynamic Screen View */}
-        <div className="flex-1">
-          <AppRouter
-            currentPage={currentPage}
-            setCurrentPage={setCurrentPage}
-            activeContext={activeContext}
-            setActiveContext={setActiveContext}
+          {/* Futuristic TopBar */}
+          <TopBar
+            activeTab={currentPage}
+            onChangeTab={setCurrentPage}
+            selectedCity={activeContext?.city?.displayName || 'Delhi, India'}
+            selectedCityObject={activeContext?.city}
+            onSelectCity={(city) => {
+              setActiveContext((prev) => ({
+                ...prev,
+                city
+              }));
+            }}
+            theme={theme}
+            onToggleTheme={handleToggleTheme}
             currentUser={currentUser}
-            onRequireAuth={handleRequireAuth}
+            onOpenAuth={() => {
+              setAuthPromptMessage(null);
+              setIsAuthOpen(true);
+            }}
+            onSignOut={handleSignOut}
+            onOpenPrivacy={() => setCurrentPage('privacy')}
+          />
+
+          {/* Dynamic Screen View */}
+          <div className="flex-1">
+            <AppRouter
+              currentPage={currentPage}
+              setCurrentPage={setCurrentPage}
+              activeContext={activeContext}
+              setActiveContext={setActiveContext}
+              currentUser={currentUser}
+              onRequireAuth={handleRequireAuth}
+            />
+          </div>
+
+          {/* Global Floating DayShift AI Orb Launcher (Feature Eleven) */}
+          <DayShiftAiOrb />
+
+          {/* Global Floating DayShift AI Assistant Panel (Feature Eleven & Eight) */}
+          <GlobalAiChatDrawer
+            currentPage={currentPage}
+            activeContext={activeContext}
+          />
+
+          {/* Global Footer with Scientific Citations & Logo (Overview / Landing page only) */}
+          {currentPage === 'landing' && <Footer onChangeTab={setCurrentPage} />}
+
+          {/* Floating Mobile Bottom Navigation */}
+          <BottomNav
+            activeTab={currentPage}
+            onChangeTab={setCurrentPage}
+          />
+
+          {/* Firebase Authentication Modal */}
+          <AuthModal
+            isOpen={isAuthOpen}
+            promptMessage={authPromptMessage}
+            onClose={() => {
+              setIsAuthOpen(false);
+              setAuthPromptMessage(null);
+              setPendingTargetPage(null);
+            }}
+            onAuthSuccess={handleAuthSuccess}
           />
         </div>
-
-        {/* Global Footer with Scientific Citations & Logo (Overview / Landing page only) */}
-        {currentPage === 'landing' && <Footer onChangeTab={setCurrentPage} />}
-
-        {/* Floating Mobile Bottom Navigation */}
-        <BottomNav
-          activeTab={currentPage}
-          onChangeTab={setCurrentPage}
-        />
-
-        {/* Firebase Authentication Modal */}
-        <AuthModal
-          isOpen={isAuthOpen}
-          promptMessage={authPromptMessage}
-          onClose={() => {
-            setIsAuthOpen(false);
-            setAuthPromptMessage(null);
-            setPendingTargetPage(null);
-          }}
-          onAuthSuccess={handleAuthSuccess}
-        />
-      </div>
+      </AssistantProvider>
     </AppProviders>
   );
 }

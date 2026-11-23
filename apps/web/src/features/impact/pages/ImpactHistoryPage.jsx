@@ -1,5 +1,6 @@
 import React from 'react';
 import { BarChart3, TrendingDown, ArrowDownRight, ShieldCheck, CheckCircle2, Award, Calendar } from 'lucide-react';
+import { HabitTracker } from '../components/HabitTracker.jsx';
 
 export function ImpactHistoryPage() {
   const weeklyBars = [
@@ -28,6 +29,9 @@ export function ImpactHistoryPage() {
           Cumulative verified emissions avoided and cleaner-routine decisions.
         </p>
       </div>
+
+      {/* Feature Five: Sustainable Habit Tracker */}
+      <HabitTracker />
 
       {/* Featured Weekly Bar Chart Card */}
       <div className="cyber-card-elevated p-6 sm:p-8 rounded-[32px] space-y-6">

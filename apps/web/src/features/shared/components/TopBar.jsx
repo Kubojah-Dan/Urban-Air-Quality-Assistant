@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ShieldCheck, Sparkles, Settings, MapPin, Compass, Sun, Moon, User, LogOut, ChevronDown } from 'lucide-react';
 import { PlacePicker } from '../../location/components/PlacePicker.jsx';
+import { AlertCenter } from '../../alerts/components/AlertCenter.jsx';
 import { authService } from '../../../infrastructure/auth/firebaseAuth.js';
 
 export function TopBar({
@@ -105,6 +106,9 @@ export function TopBar({
               </div>
             )}
           </div>
+
+          {/* Smart Contextual Alerts Bell (Feature Seven) */}
+          <AlertCenter selectedCity={selectedCity} />
 
           {/* Theme Switcher Toggle (Dark vs Light) */}
           <button

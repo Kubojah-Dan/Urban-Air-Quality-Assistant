@@ -84,9 +84,18 @@
   color: #0F172A;
 }
 
-/* High contrast text overrides */
-.theme-light h1, .theme-light h2, .theme-light h3, .theme-light h4 {
-  color: #0F172A !important;
+/* High contrast text overrides - exempt photo overlay headings */
+.theme-light h1:not(.text-white):not([data-overlay="true"]),
+.theme-light h2:not(.text-white):not([data-overlay="true"]),
+.theme-light h3:not(.text-white):not([data-overlay="true"]),
+.theme-light h4:not(.text-white):not([data-overlay="true"]) {
+  color: #0F172A;
+}
+
+/* Headings and labels with text-white on image overlays must stay pure white in all themes */
+.theme-light .text-white,
+.theme-light [data-overlay="true"] {
+  color: #FFFFFF !important;
 }
 
 /* Neon Glow Accents */

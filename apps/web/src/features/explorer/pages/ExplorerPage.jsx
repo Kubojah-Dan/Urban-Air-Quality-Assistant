@@ -4,6 +4,7 @@ import { PollutantTimeline } from '../../forecast/components/PollutantTimeline.j
 import { useAirEvidence } from '../../forecast/hooks/useAirEvidence.js';
 import { CircularAqiGauge } from '../../forecast/components/CircularAqiGauge.jsx';
 import { UrbanAirMap } from '../../forecast/components/UrbanAirMap.jsx';
+import { ActivityPlanner } from '../../forecast/components/ActivityPlanner.jsx';
 import { Wind, ShieldCheck, Database, Calendar, RefreshCw, AlertCircle, MapPin } from 'lucide-react';
 
 export function ExplorerPage({ initialCity, onSelectCity }) {
@@ -160,6 +161,12 @@ export function ExplorerPage({ initialCity, onSelectCity }) {
           unit="μg/m³"
         />
       </div>
+
+      {/* Feature Four: Air Quality Forecast & Activity Planner */}
+      <ActivityPlanner
+        records={evidenceBundle?.records || []}
+        selectedCity={selectedCity.displayName}
+      />
     </div>
   );
 }
