@@ -99,7 +99,15 @@ export function AppRouter({
 
       {/* Screen H: Air Quality Explorer */}
       {currentPage === 'explorer' && (
-        <ExplorerPage initialCity={context?.city} />
+        <ExplorerPage
+          initialCity={context?.city}
+          onSelectCity={(city) => {
+            setContext((prev) => ({
+              ...prev,
+              city
+            }));
+          }}
+        />
       )}
 
       {/* Screen I: Impact History */}

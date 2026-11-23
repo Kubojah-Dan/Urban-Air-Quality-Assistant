@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PlacePicker } from '../../location/components/PlacePicker.jsx';
 import { PollutantTimeline } from '../../forecast/components/PollutantTimeline.jsx';
 import { useAirEvidence } from '../../forecast/hooks/useAirEvidence.js';
@@ -6,7 +6,7 @@ import { CircularAqiGauge } from '../../forecast/components/CircularAqiGauge.jsx
 import { UrbanAirMap } from '../../forecast/components/UrbanAirMap.jsx';
 import { Wind, ShieldCheck, Database, Calendar, RefreshCw, AlertCircle, MapPin } from 'lucide-react';
 
-export function ExplorerPage({ initialCity }) {
+export function ExplorerPage({ initialCity, onSelectCity }) {
   const [selectedCity, setSelectedCity] = useState(
     initialCity || {
       countryCode: 'IN',
@@ -17,6 +17,20 @@ export function ExplorerPage({ initialCity }) {
       timeZone: 'Asia/Kolkata'
     }
   );
+
+  // Sync state when global city changes from TopBar or other components
+  useEffect(() => {
+    if (initialCity && initialCity.displayName !== selectedCity.displayName) {
+      setSelectedCity(initialCity);
+    }
+  }, [initialCity]);
+
+  const handleCitySelect = (city) => {
+    setSelectedCity(city);
+    if (onSelectCity) {
+      onSelectCity(city);
+    }
+  };
 
   const { data: evidenceBundle, isLoading, refetch } = useAirEvidence(selectedCity);
 
@@ -61,7 +75,7 @@ export function ExplorerPage({ initialCity }) {
         <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-cyber-text-muted block">
           Select Monitored Urban Area
         </label>
-        <PlacePicker selectedCity={selectedCity} onSelectCity={setSelectedCity} />
+        <PlacePicker selectedCity={selectedCity} onSelectCity={handleCitySelect} />
       </div>
 
       {/* Interactive Urban Air & Station Dispersion Map */}

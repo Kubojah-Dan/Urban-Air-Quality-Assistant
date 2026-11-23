@@ -94,6 +94,8 @@ export function createContainer() {
     createRecommendationUseCase,
     reviseRecommendationUseCase,
     getAirEvidenceUseCase,
-    getIndoorGuidanceUseCase
+    getIndoorGuidanceUseCase,
+    geminiProvider,
+    groqProvider
   };
 }

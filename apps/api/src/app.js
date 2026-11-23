@@ -11,6 +11,7 @@ import { createRecommendationRoutes } from './routes/recommendation.routes.js';
 import { createIndoorRoutes } from './routes/indoor.routes.js';
 import { createFeedbackRoutes } from './routes/feedback.routes.js';
 import { createPreferencesRoutes } from './routes/preferences.routes.js';
+import { createAssistantRoutes } from './routes/assistant.routes.js';
 import { env } from './config/env.js';
 
 export function createApp(container) {
@@ -54,6 +55,13 @@ export function createApp(container) {
   apiRouter.use(createIndoorRoutes({ indoorController: container.indoorController }));
   apiRouter.use(createFeedbackRoutes());
   apiRouter.use(createPreferencesRoutes({ preferenceRepository: container.preferenceRepository }));
+  apiRouter.use(
+    createAssistantRoutes({
+      getAirEvidenceUseCase: container.getAirEvidenceUseCase,
+      geminiProvider: container.geminiProvider,
+      groqProvider: container.groqProvider
+    })
+  );
 
   app.use('/api/v1', apiRouter);
 

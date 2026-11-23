@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { AppProviders } from './providers.jsx';
 import { TopBar } from '../features/shared/components/TopBar.jsx';
 import { BottomNav } from '../features/shared/components/BottomNav.jsx';
+import { Footer } from '../features/shared/components/Footer.jsx';
 import { AuthModal } from '../features/auth/components/AuthModal.jsx';
 import { authService } from '../infrastructure/auth/firebaseAuth.js';
 import { AppRouter } from './router.jsx';
@@ -94,6 +95,7 @@ export function App() {
   const handleSignOut = async () => {
     await authService.signOut();
     setCurrentUser(null);
+    setCurrentPage('landing');
   };
 
   const handleRequireAuth = (targetPage, customPrompt) => {
@@ -165,6 +167,9 @@ export function App() {
             onRequireAuth={handleRequireAuth}
           />
         </div>
+
+        {/* Global Footer with Scientific Citations & Logo (Overview / Landing page only) */}
+        {currentPage === 'landing' && <Footer onChangeTab={setCurrentPage} />}
 
         {/* Floating Mobile Bottom Navigation */}
         <BottomNav

@@ -99,4 +99,57 @@ export class GeminiProvider extends ModelProvider {
       clearTimeout(timeoutId);
     }
   }
+
+  async generateChatResponse({ systemPrompt, userPrompt }) {
+    if (!this.apiKey) {
+      const err = new Error('Gemini API key not configured');
+      err.status = 503;
+      throw err;
+    }
+
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${this.model}:generateContent?key=${this.apiKey}`;
+
+    const requestPayload = {
+      contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
+      generationConfig: {
+        maxOutputTokens: 1000
+      }
+    };
+
+    if (systemPrompt) {
+      requestPayload.systemInstruction = {
+        parts: [{ text: systemPrompt }]
+      };
+    }
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), this.timeoutMs);
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestPayload),
+        signal: controller.signal
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text().catch(() => '');
+        const err = new Error(`Gemini error (${response.status}): ${errorText.slice(0, 200)}`);
+        err.status = response.status;
+        err.retryable = response.status === 429 || (response.status >= 500 && response.status <= 504);
+        throw err;
+      }
+
+      const data = await response.json();
+      const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      return {
+        provider: 'google',
+        model: this.model,
+        text: rawText?.trim() || ''
+      };
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  }
 }

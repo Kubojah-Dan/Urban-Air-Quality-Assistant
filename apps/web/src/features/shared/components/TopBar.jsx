@@ -32,7 +32,7 @@ export function TopBar({
   return (
     <header className="sticky top-2 sm:top-3 z-40 px-3 sm:px-6 transition-all duration-300">
       <div className="max-w-6xl mx-auto rounded-2xl sm:rounded-3xl cyber-card-elevated border border-slate-200/90 dark:border-white/10 px-3 sm:px-5 py-2 sm:py-2.5 backdrop-blur-xl bg-white/90 dark:bg-[#101726]/90 shadow-xl flex items-center justify-between">
-        {/* Brand logo & tagline */}
+        {/* Brand logo */}
         <div
           className="flex items-center gap-2.5 cursor-pointer group"
           onClick={() => onChangeTab && onChangeTab('landing')}
@@ -42,14 +42,9 @@ export function TopBar({
             alt="DayShift Logo"
             className="h-8 sm:h-9 w-auto object-contain transition-transform group-hover:scale-105"
           />
-          <div className="hidden sm:flex flex-col">
-            <span className="text-[10px] font-extrabold uppercase tracking-widest text-cyber-teal font-display">
-              Cleaner Air Choices
-            </span>
-            <span className="text-[9px] text-slate-500 dark:text-cyber-text-muted font-medium">
-              AI Urban Air Quality Assistant
-            </span>
-          </div>
+          <span className="text-base sm:text-lg font-black tracking-tight font-display text-slate-900 dark:text-white flex items-center select-none">
+            Day<span className="text-cyber-teal">Shift</span>
+          </span>
         </div>
 
         {/* Desktop Navigation Tabs */}

@@ -103,4 +103,58 @@ export class GroqProvider extends ModelProvider {
       clearTimeout(timeoutId);
     }
   }
+
+  async generateChatResponse({ systemPrompt, userPrompt }) {
+    if (!this.apiKey) {
+      const err = new Error('Groq API key not configured');
+      err.status = 503;
+      throw err;
+    }
+
+    const url = `${this.baseUrl}/chat/completions`;
+    const messages = [];
+    if (systemPrompt) {
+      messages.push({ role: 'system', content: systemPrompt });
+    }
+    messages.push({ role: 'user', content: userPrompt });
+
+    const requestPayload = {
+      model: this.model,
+      messages,
+      max_tokens: 1000
+    };
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), this.timeoutMs);
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.apiKey}`
+        },
+        body: JSON.stringify(requestPayload),
+        signal: controller.signal
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text().catch(() => '');
+        const err = new Error(`Groq error (${response.status}): ${errorText.slice(0, 200)}`);
+        err.status = response.status;
+        err.retryable = response.status === 429 || (response.status >= 500 && response.status <= 504);
+        throw err;
+      }
+
+      const data = await response.json();
+      const rawText = data.choices?.[0]?.message?.content;
+      return {
+        provider: 'groq',
+        model: this.model,
+        text: rawText?.trim() || ''
+      };
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  }
 }

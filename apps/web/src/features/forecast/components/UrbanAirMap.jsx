@@ -109,11 +109,10 @@ export function UrbanAirMap({ selectedCity, currentPm25 = 24 }) {
           <button
             type="button"
             onClick={() => setShowContours(!showContours)}
-            className={`px-3 py-1.5 rounded-xl border transition cursor-pointer flex items-center gap-1.5 ${
-              showContours
+            className={`px-3 py-1.5 rounded-xl border transition cursor-pointer flex items-center gap-1.5 ${showContours
                 ? 'bg-cyber-teal text-slate-950 border-cyber-teal shadow-xs'
                 : 'bg-slate-100 dark:bg-white/5 border-slate-300 dark:border-white/10 text-slate-700 dark:text-slate-300'
-            }`}
+              }`}
           >
             <Layers className="w-3.5 h-3.5" />
             <span>Dispersion Flow</span>
@@ -168,7 +167,7 @@ export function UrbanAirMap({ selectedCity, currentPm25 = 24 }) {
             opacity="0.75"
           />
           <text x="130" y="225" fill="#00E5BE" fontSize="9" fontWeight="bold" letterSpacing="0.1em">
-            METRO BLUE LINE (ZERO CURB DIESEL)
+            {cityName.toUpperCase()} TRANSIT CORRIDOR (ZERO CURB DIESEL)
           </text>
         </svg>
 
@@ -187,22 +186,20 @@ export function UrbanAirMap({ selectedCity, currentPm25 = 24 }) {
             >
               {/* Outer pulsing ring */}
               <div
-                className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${
-                  isSelected
+                className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${isSelected
                     ? 'ring-4 ring-cyber-teal shadow-cyber-glow-teal scale-110 bg-slate-900 text-white'
                     : 'bg-white dark:bg-slate-900 shadow-md border border-slate-300 dark:border-white/20'
-                }`}
+                  }`}
               >
                 <span className={`w-3.5 h-3.5 rounded-full ${status.bg}`} />
               </div>
 
               {/* Station Label Tooltip */}
               <div
-                className={`absolute left-1/2 -translate-x-1/2 top-10 whitespace-nowrap px-2 py-0.5 rounded-md text-[10px] font-bold shadow-md transition-all ${
-                  isSelected
+                className={`absolute left-1/2 -translate-x-1/2 top-10 whitespace-nowrap px-2 py-0.5 rounded-md text-[10px] font-bold shadow-md transition-all ${isSelected
                     ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-950 scale-105'
                     : 'bg-white/90 text-slate-800 dark:bg-slate-900/90 dark:text-white border border-slate-200 dark:border-white/10 opacity-80 group-hover:opacity-100'
-                }`}
+                  }`}
               >
                 {st.pm25} μg/m³ • {st.name.split(' ')[0]}
               </div>
