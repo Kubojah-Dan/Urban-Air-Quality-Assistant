@@ -2,7 +2,7 @@
  * Invariant enforcement: DayShift strictly forbids converting ambient AQI readings
  * into personal health-risk scores, personal inhaled dose, or percentage reductions in exposure.
  *
- * @param {number} ambientAqi
+ * @param {number} _ambientAqi
  * @returns {{ allowed: boolean, reason: string }}
  */
 export function validateExposureProxyBoundaries(_ambientAqi) {

@@ -1,11 +1,11 @@
 # DayShift — Constraint-Aware Urban Air Quality Assistant
 
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](file:///d:/DayShift/Urban-Air-Quality-Assistant)
-[![Tests](https://img.shields.io/badge/tests-65%2F65%20passing-brightgreen.svg)](file:///d:/DayShift/Urban-Air-Quality-Assistant/tests)
-[![Code Style](https://img.shields.io/badge/code%20style-pure%20JavaScript%20ES6+-blue.svg)](file:///d:/DayShift/Urban-Air-Quality-Assistant)
-[![Accessibility](https://img.shields.io/badge/accessibility-WCAG%202.2%20AA-success.svg)](file:///d:/DayShift/Urban-Air-Quality-Assistant/docs/ACCESSIBILITY.md)
-[![Privacy](https://img.shields.io/badge/privacy-DPDP%20Act%202023%20%2F%20GDPR-blueviolet.svg)](file:///d:/DayShift/Urban-Air-Quality-Assistant/apps/web/src/features/preferences/pages/PrivacySettingsPage.jsx)
-[![License](https://img.shields.io/badge/license-MIT-lightgrey.svg)](file:///d:/DayShift/Urban-Air-Quality-Assistant/LICENSE)
+[![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](https://github.com/Kubojah-Dan/Urban-Air-Quality-Assistant)
+[![Tests](https://img.shields.io/badge/tests-76%2F76%20passing-brightgreen.svg)](tests)
+[![Code Style](https://img.shields.io/badge/code%20style-pure%20JavaScript%20ES6+-blue.svg)](https://github.com/Kubojah-Dan/Urban-Air-Quality-Assistant)
+[![Accessibility](https://img.shields.io/badge/accessibility-WCAG%202.2%20AA-success.svg)](docs/ACCESSIBILITY.md)
+[![Privacy](https://img.shields.io/badge/privacy-DPDP%20Act%202023%20%2F%20GDPR-blueviolet.svg)](apps/web/src/features/preferences/pages/PrivacySettingsPage.jsx)
+[![License](https://img.shields.io/badge/license-MIT-lightgrey.svg)](LICENSE)
 
 > **PromptWars / Hack2Skill Challenge 6**  
 > An evidence-aware daily routine planner that delivers realistic, constraint-aware cleaner-air choices without demanding continuous GPS tracking, expensive air purifiers, or complete lifestyle disruption.

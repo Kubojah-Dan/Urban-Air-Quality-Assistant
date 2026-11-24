@@ -17,15 +17,27 @@
     "format:write": "prettier --write .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "typecheck": "tsc --project tsconfig.json",
+    "security:scan": "vitest run tests/security/secret-scanning.test.js"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
     "@eslint/js": "^9.20.0",
+    "@playwright/test": "^1.65.1",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.13",
+    "@vitest/coverage-v8": "^3.2.7",
     "concurrently": "^9.1.2",
     "eslint": "^9.20.0",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-react-hooks": "^7.1.1",
     "globals": "^15.14.0",
+    "jsdom": "^26.1.0",
     "prettier": "^3.5.1",
     "supertest": "^7.0.0",
+    "typescript": "^7.0.2",
     "vitest": "^3.0.5"
   },
   "engines": {

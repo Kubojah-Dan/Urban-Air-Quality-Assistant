@@ -17,6 +17,17 @@ import { env } from './config/env.js';
 export function createApp(container) {
   const app = express();
 
+  const allowedOrigins = new Set(
+    [
+      env.WEB_ORIGIN,
+      'https://dayshift-opal.vercel.app',
+      'http://localhost:5173',
+      'http://localhost:4173',
+      'http://127.0.0.1:5173',
+      'http://127.0.0.1:4173'
+    ].filter(Boolean)
+  );
+
   app.use(securityHeaders());
   app.use(
     cors({
@@ -24,18 +35,15 @@ export function createApp(container) {
         // Allow mobile, CLI, or same-origin requests without Origin header
         if (!origin) return callback(null, true);
 
-        // Allow configured origin, localhost dev servers, and all Vercel deployments (*.vercel.app)
-        if (
-          origin === env.WEB_ORIGIN ||
-          origin === 'http://localhost:5173' ||
-          origin === 'http://localhost:4173' ||
-          origin.endsWith('.vercel.app')
-        ) {
+        if (allowedOrigins.has(origin)) {
           return callback(null, true);
         }
 
-        // Permissive callback dynamically reflects the origin for CORS preflights
-        return callback(null, true);
+        // Reject unapproved origins
+        const corsErr = new Error(`Origin ${origin} not permitted by DayShift CORS policy.`);
+        corsErr.status = 403;
+        corsErr.code = 'CORS_ORIGIN_DENIED';
+        return callback(corsErr, false);
       },
       credentials: true
     })

@@ -18,7 +18,34 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    include: ['tests/**/*.test.js', 'packages/**/*.test.js', 'apps/**/*.test.js'],
-    exclude: ['**/node_modules/**', '**/dist/**', '**/*.spec.js']
+    environmentMatchGlobs: [
+      ['**/*.test.jsx', 'jsdom'],
+      ['apps/web/**', 'jsdom']
+    ],
+    include: [
+      'tests/**/*.test.js',
+      'tests/**/*.test.jsx',
+      'packages/**/*.test.js',
+      'packages/**/*.test.jsx',
+      'apps/**/*.test.js',
+      'apps/**/*.test.jsx'
+    ],
+    exclude: [
+      '**/node_modules/**',
+      '**/dist/**',
+      'tests/e2e/**',
+      '**/*.spec.js'
+    ],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+      exclude: [
+        '**/node_modules/**',
+        '**/dist/**',
+        'tests/**',
+        '**/*.spec.js',
+        '**/*.config.js'
+      ]
+    }
   }
 });

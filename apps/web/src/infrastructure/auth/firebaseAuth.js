@@ -41,7 +41,13 @@ function getAuthInstance() {
 
 async function formatFirebaseUser(fbUser) {
   if (!fbUser) return null;
-  const token = await fbUser.getIdToken().catch(() => fbUser.uid);
+  let token = null;
+  try {
+    token = await fbUser.getIdToken();
+  } catch {
+    // If obtaining ID token fails, token remains null; never fallback to raw UID
+    token = null;
+  }
   const user = {
     uid: fbUser.uid,
     email: fbUser.email,

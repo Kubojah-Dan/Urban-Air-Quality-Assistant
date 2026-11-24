@@ -40,8 +40,21 @@ export class ModelRouter {
         if (!retryable || attempt === maxAttempts) {
           throw err;
         }
-        // If Retry-After header present, respect it (up to 1s in execution context)
-        const backoffMs = Math.min(1000, attempt * 300);
+
+        // Parse Retry-After header if present, otherwise use progressive backoff (bounded to 2s)
+        let backoffMs = attempt * 300;
+        const retryAfterHeader =
+          err?.headers?.get && typeof err.headers.get === 'function'
+            ? err.headers.get('retry-after')
+            : err?.headers?.['retry-after'];
+
+        if (retryAfterHeader) {
+          const parsedSeconds = parseInt(retryAfterHeader, 10);
+          if (!isNaN(parsedSeconds) && parsedSeconds > 0) {
+            backoffMs = Math.min(2000, parsedSeconds * 1000);
+          }
+        }
+
         await new Promise((r) => setTimeout(r, backoffMs));
       }
     }
@@ -76,7 +89,8 @@ export class ModelRouter {
             degradedMode: false
           };
         }
-        // Semantic validation failed
+        // Semantic validation failed — record circuit breaker failure
+        this.primaryBreaker.recordFailure();
         logger.warn('Gemini primary failed semantic validation', { error: validation.error });
         fallbackReason = `Primary provider semantic validation failed: ${validation.error}`;
       } catch (err) {

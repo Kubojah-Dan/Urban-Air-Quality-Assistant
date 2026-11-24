@@ -1,23 +1,19 @@
 import { Router } from 'express';
+import { AssistantChatRequestSchema } from '@dayshift/contracts';
+import { validateRequest } from '../middleware/validateRequest.js';
 import { logger } from '../observability/logger.js';
 
 export function createAssistantRoutes({ getAirEvidenceUseCase, geminiProvider, groqProvider }) {
   const router = Router();
 
-  router.post('/assistant/chat', async (req, res, next) => {
+  router.post('/assistant/chat', validateRequest(AssistantChatRequestSchema), async (req, res, next) => {
     try {
       const { query, city, context } = req.body;
-      const targetQuery = query?.trim();
-
-      if (!targetQuery) {
-        return res.status(400).json({
-          error: { message: 'Query cannot be empty.' }
-        });
-      }
+      const targetQuery = query.trim();
 
       // 1. Fetch REAL-TIME air quality telemetry for the user's selected city
       const targetCity = city || {
-        displayName: 'Delhi, India',
+        displayName: 'Delhi (NCR), Delhi',
         cityId: 'delhi',
         latitude: 28.6139,
         longitude: 77.2090,
@@ -37,24 +33,35 @@ export function createAssistantRoutes({ getAirEvidenceUseCase, geminiProvider, g
       const no2Record = records.find((r) => r.pollutant === 'NO2');
       const o3Record = records.find((r) => r.pollutant === 'O3');
 
-      const pm25 = pm25Record ? Math.round(pm25Record.value) : 24;
-      const pm10 = pm10Record ? Math.round(pm10Record.value) : 48;
-      const no2 = no2Record ? Math.round(no2Record.value) : 16;
-      const o3 = o3Record ? Math.round(o3Record.value) : 28;
+      // Honest telemetry: never fabricate readings; use null when unmeasured or offline
+      const pm25 = pm25Record && Number.isFinite(pm25Record.value) ? Math.round(pm25Record.value) : null;
+      const pm10 = pm10Record && Number.isFinite(pm10Record.value) ? Math.round(pm10Record.value) : null;
+      const no2 = no2Record && Number.isFinite(no2Record.value) ? Math.round(no2Record.value) : null;
+      const o3 = o3Record && Number.isFinite(o3Record.value) ? Math.round(o3Record.value) : null;
 
       const aqiCategory =
-        pm25 <= 30 ? 'Good' : pm25 <= 60 ? 'Satisfactory' : pm25 <= 120 ? 'Moderate' : pm25 <= 250 ? 'Poor' : 'Severe';
+        pm25 !== null
+          ? pm25 <= 30
+            ? 'Good'
+            : pm25 <= 60
+              ? 'Satisfactory'
+              : pm25 <= 120
+                ? 'Moderate'
+                : pm25 <= 250
+                  ? 'Poor'
+                  : 'Severe'
+          : 'Station Unmonitored / Offline';
 
-      // 2. Build system instruction with real data injection & ARAI 2024 emissions factors
+      // 2. Build system instruction with real telemetry disclosure & ARAI 2024 emissions factors
       const systemPrompt = `You are DayShift's Environmental AI Assistant — an expert in urban air quality, low-emission commute shifting, and indoor source-control in India.
-You have access to REAL-TIME atmospheric telemetry and ARAI 2024 emissions factors.
+You have access to atmospheric telemetry and ARAI 2024 emissions factors.
 
-CURRENT LIVE ENVIRONMENTAL TELEMETRY FOR ${targetCity.displayName}:
-- Fine Particulate Matter (PM2.5): ${pm25} µg/m³ (${aqiCategory})
-- Coarse Particulate Matter (PM10): ${pm10} µg/m³
-- Nitrogen Dioxide (NO2): ${no2} ppb
-- Ozone (O3): ${o3} ppb
-- Active Forecast Window: Next 24 hours via Copernicus CAMS & CPCB Ingestion.
+CURRENT LOCAL ENVIRONMENTAL OBSERVATION FOR ${targetCity.displayName}:
+- Fine Particulate Matter (PM2.5): ${pm25 !== null ? `${pm25} µg/m³ (${aqiCategory})` : 'Sensor unavailable / station unmonitored at this hour'}
+- Coarse Particulate Matter (PM10): ${pm10 !== null ? `${pm10} µg/m³` : 'Not recorded'}
+- Nitrogen Dioxide (NO2): ${no2 !== null ? `${no2} ppb` : 'Not recorded'}
+- Ozone (O3): ${o3 !== null ? `${o3} ppb` : 'Not recorded'}
+- Data Ingestion Window: Copernicus CAMS model + CPCB ground stations (${evidenceBundle?.provenance || 'Regional atmospheric ingestion'}).
 
 USER DAILY COMMUTE & HOUSEHOLD CONTEXT:
 - City: ${targetCity.displayName}
@@ -68,11 +75,11 @@ KNOWLEDGE INVARIANTS:
 1. Transport Emissions (ARAI 2024 registry): Solo petrol car (~180g CO2/km), diesel car (~210g CO2/km), two-wheeler (~65g CO2/km), electric bus/metro rail (~15g CO2/passenger-km).
 2. Curbside vs In-Cabin: In heavy traffic, vehicle AC on recirculation reduces in-cabin PM2.5 infiltration by 50-70% compared to windows down.
 3. Inversion Dynamics: Morning surface temperature inversions peak between 07:30 and 09:30 AM in Indian metros. Leaving 30-45 minutes earlier or shifting to rail avoids dense curbside plumes.
-4. Indoor Protocol: When outdoor PM2.5 is high, rely on source control and mechanical HEPA filtration rather than open window cross-ventilation.
-5. Safety: NEVER promise medical cures or fabricate personal inhaled dose numbers. Always ground advice in ambient context and ARAI factors.
+4. Indoor Protocol: When outdoor PM2.5 is elevated, rely on source control and mechanical HEPA filtration rather than open window cross-ventilation.
+5. Honesty & Safety: NEVER promise medical cures or fabricate personal inhaled dose numbers. If a pollutant is unrecorded, acknowledge the sensor data gap.
 
 INSTRUCTIONS:
-Answer the user's specific query clearly, citing the real telemetry numbers for ${targetCity.displayName} given above. Keep your answer practical, concise, and structured (under 180 words).`;
+Answer the user's specific query clearly, citing the authentic telemetry or noting unrecorded metrics for ${targetCity.displayName}. Keep your answer practical, concise, and structured (under 180 words).`;
 
       // 3. Dual-Provider AI Gateway (Gemini 2.5 Flash -> Groq Failover -> Deterministic fallback)
       let reply = '';
@@ -111,7 +118,12 @@ Answer the user's specific query clearly, citing the real telemetry numbers for 
       if (!reply) {
         usedProvider = 'deterministic_engine';
         usedModel = 'cams-arai-synthesis-v1';
-        reply = `Current live telemetry for ${targetCity.displayName} shows PM2.5 at ${pm25} µg/m³ (${aqiCategory}) and PM10 at ${pm10} µg/m³. Based on regional Copernicus CAMS forecasts, switching your commute to electric metro rail avoids ~380g CO2 per 10km (ARAI 2024 registry) while bypassing street-level combustion corridors. In vehicles, keep windows closed with AC on cabin recirculation to reduce particulate infiltration.`;
+        const metricSummary =
+          pm25 !== null
+            ? `indicates PM2.5 at ${pm25} µg/m³ (${aqiCategory})`
+            : 'has limited localized sensor telemetry at this hour';
+
+        reply = `Current atmospheric telemetry for ${targetCity.displayName} ${metricSummary}. Based on regional Copernicus CAMS forecasts, switching your commute to electric metro rail avoids ~380g CO2 per 10km (ARAI 2024 registry) while bypassing street-level combustion corridors. In vehicles, keep windows closed with AC on cabin recirculation to reduce particulate infiltration.`;
       }
 
       return res.json({

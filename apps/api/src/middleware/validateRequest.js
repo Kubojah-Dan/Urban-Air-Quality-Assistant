@@ -7,10 +7,12 @@ export function validateRequest(schema, source = 'body') {
       else req.body = parsed;
       next();
     } catch (error) {
+      const issues = error.issues || error.errors || [];
+      const firstMessage = issues[0]?.message || 'Invalid request payload';
       res.status(400).json({
         error: {
-          message: 'Invalid request payload',
-          details: error.errors,
+          message: firstMessage,
+          details: issues,
           code: 'VALIDATION_ERROR'
         }
       });
