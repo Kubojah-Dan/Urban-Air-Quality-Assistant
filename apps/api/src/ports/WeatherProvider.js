@@ -3,7 +3,7 @@
  */
 export class WeatherProvider {
   /**
-   * @param {Object} locationContext
+   * @param {Object} _locationContext
    * @returns {Promise<Object>}
    */
   async getWeatherContext(_locationContext) {

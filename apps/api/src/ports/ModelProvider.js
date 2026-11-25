@@ -3,7 +3,7 @@
  */
 export class ModelProvider {
   /**
-   * @param {Object} promptInput
+   * @param {Object} _promptInput
    * @returns {Promise<Object>}
    */
   async generateRankedRecommendation(_promptInput) {

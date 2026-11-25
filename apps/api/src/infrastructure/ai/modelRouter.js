@@ -41,15 +41,16 @@ export class ModelRouter {
           throw err;
         }
 
-        // Parse Retry-After header if present, otherwise use progressive backoff (bounded to 2s)
+        // Parse Retry-After (supplied directly on err.retryAfter by provider or via headers)
         let backoffMs = attempt * 300;
-        const retryAfterHeader =
-          err?.headers?.get && typeof err.headers.get === 'function'
+        const retryAfterVal =
+          err?.retryAfter ||
+          (err?.headers?.get && typeof err.headers.get === 'function'
             ? err.headers.get('retry-after')
-            : err?.headers?.['retry-after'];
+            : err?.headers?.['retry-after']);
 
-        if (retryAfterHeader) {
-          const parsedSeconds = parseInt(retryAfterHeader, 10);
+        if (retryAfterVal) {
+          const parsedSeconds = parseInt(String(retryAfterVal), 10);
           if (!isNaN(parsedSeconds) && parsedSeconds > 0) {
             backoffMs = Math.min(2000, parsedSeconds * 1000);
           }

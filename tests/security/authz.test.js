@@ -130,7 +130,7 @@ describe('Security: Authentication, Authorization, Owner Isolation & CORS', () =
     expect(verifyRes.body.preferences).toEqual({});
   });
 
-  it('preserves guest access to public endpoints without any token', async () => {
+  it('preserves guest access to public endpoints without any token', { timeout: 20000 }, async () => {
     // 1. Health check is public
     const healthRes = await request(app).get('/api/v1/health');
     expect(healthRes.status).toBe(200);

@@ -196,4 +196,49 @@ describe('AI Dual-Provider Failover & Semantic Validation', () => {
     expect(attempts).toBe(3); // untouched
     expect(result.fallbackReason).toContain('circuit breaker OPEN');
   });
+
+  it('correctly consumes err.retryAfter on transient error during retry', async () => {
+    let callCount = 0;
+    const retryProvider = {
+      model: 'test-model',
+      generateRankedRecommendation: async () => {
+        callCount++;
+        if (callCount === 1) {
+          const err = new Error('Rate limit with Retry-After');
+          err.status = 429;
+          err.retryable = true;
+          err.retryAfter = '1'; // 1 second
+          throw err;
+        }
+        return {
+          provider: 'test',
+          model: 'test-model',
+          output: {
+            rankedCandidateIds: ['cand_rec'],
+            reasonCodes: ['LOWER_EXPOSURE_WINDOW'],
+            evidenceIds: ['ev_1'],
+            explanation: 'Clean shift.'
+          }
+        };
+      }
+    };
+
+    const router = new ModelRouter({
+      primaryProvider: retryProvider,
+      enableFallback: false,
+      maxRetriesPerProvider: 1
+    });
+
+    const start = Date.now();
+    const res = await router.routeRecommendation({
+      baseline: { id: 'b' },
+      candidates: [{ id: 'cand_rec' }],
+      evidenceIds: ['ev_1']
+    });
+
+    const elapsed = Date.now() - start;
+    expect(callCount).toBe(2);
+    expect(elapsed).toBeGreaterThanOrEqual(900); // Respects the 1s backoff from retryAfter
+    expect(res.provider).toBe('google');
+  });
 });

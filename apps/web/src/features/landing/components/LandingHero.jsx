@@ -64,13 +64,13 @@ export function LandingHero({ onStartOnboarding, onExploreAirQuality }) {
                   <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-cyber-teal bg-black/60 px-2.5 py-0.5 rounded-full border border-cyber-teal/30">
                     Urban Transit Model
                   </span>
-                  <h3
+                  <h2
                     className="text-base sm:text-xl font-extrabold text-white !text-white font-display"
                     style={{ color: '#FFFFFF' }}
                     data-overlay="true"
                   >
                     Clean Commuting for Modern Indian Metros
-                  </h3>
+                  </h2>
                   <p
                     className="text-[11px] sm:text-xs text-slate-200 !text-slate-200 max-w-lg hidden sm:block"
                     style={{ color: '#E2E8F0' }}

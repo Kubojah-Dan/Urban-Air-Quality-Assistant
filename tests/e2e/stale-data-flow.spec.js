@@ -5,12 +5,16 @@ test.describe('E2E: Data Provenance & Degraded Mode Transparency', () => {
     await page.goto('/explorer');
 
     // 1. Explorer page displays air quality grid
-    await expect(page.getByText(/Air Quality Explorer/i)).toBeVisible();
+    await expect(page.getByText(/Air Quality Explorer/i).first()).toBeVisible();
 
     // 2. Data provenance header & credits (Copernicus CAMS, CPCB, AirNow)
-    await expect(page.getByText(/Copernicus/i).or(page.getByText(/CPCB/i)).or(page.getByText(/Dispersion/i))).toBeVisible();
+    await expect(
+      page.getByText(/Copernicus/i).or(page.getByText(/CPCB/i)).or(page.getByText(/Dispersion/i)).first()
+    ).toBeVisible();
 
     // 3. Hourly Forecast & Activity Planner is present
-    await expect(page.getByText(/Hourly Activity Suitability Planner/i).or(page.getByText(/Activity Planner/i))).toBeVisible();
+    await expect(
+      page.getByText(/Hourly Activity Suitability Planner/i).or(page.getByText(/Activity Planner/i)).first()
+    ).toBeVisible();
   });
 });

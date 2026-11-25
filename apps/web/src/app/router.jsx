@@ -28,13 +28,8 @@ export function AppRouter({
   const setContext = setActiveContext || setInternalContext;
 
   const handleStartOnboarding = () => {
-    // If user is not authenticated, prompt sign in / registration first
-    if (!currentUser && onRequireAuth) {
-      onRequireAuth('onboarding', 'Please sign in or create an account to personalize and save your daily routine.');
-      return;
-    }
     setPreviousPage(currentPage);
-    setCurrentPage('onboarding');
+    setCurrentPage('routine');
   };
 
   const handleCompleteOnboarding = (newContext) => {

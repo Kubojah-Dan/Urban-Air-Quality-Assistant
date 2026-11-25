@@ -94,7 +94,7 @@ export function TopBar({
               <button
                 type="button"
                 onClick={() => setShowLocationPicker(!showLocationPicker)}
-                aria-label="Change city"
+                aria-label={`Change city, currently ${selectedCity.split(',')[0]}`}
                 className="flex items-center gap-1 text-xs text-slate-700 dark:text-cyber-text-secondary bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 px-2 sm:px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-white/10 transition cursor-pointer"
               >
                 <MapPin className="w-3.5 h-3.5 text-cyber-teal shrink-0" />

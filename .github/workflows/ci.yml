@@ -24,13 +24,30 @@ jobs:
           cache: 'pnpm'
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile=false
+        run: pnpm install --frozen-lockfile
 
-      - name: Lint
-        run: pnpm lint
+      - name: Lint (Zero Warnings Enforced)
+        run: pnpm lint --max-warnings=0
+
+      - name: Static Typecheck
+        run: pnpm typecheck
 
       - name: Unit & Integration Tests
         run: pnpm test
+
+      - name: Test Coverage
+        run: pnpm test:coverage
+
+      - name: Automated Secret Scanning
+        run: pnpm security:scan
+
+      - name: Install Playwright Browsers
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Playwright E2E Tests
+        run: pnpm test:e2e
+        env:
+          CI: true
 
       - name: Build Packages & Apps
         run: pnpm build

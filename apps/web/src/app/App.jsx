@@ -14,8 +14,34 @@ import { ShieldCheck, AlertCircle, Clock, X } from 'lucide-react';
 import '../styles/globals.css';
 import '../styles/tokens.css';
 
+const VALID_PAGES = ['landing', 'today', 'routine', 'indoor', 'explorer', 'impact', 'assistant', 'privacy', 'onboarding'];
+
+function getPageFromUrl() {
+  if (typeof window === 'undefined') return 'landing';
+  const path = window.location.pathname.replace(/^\/+/, '').split('/')[0].toLowerCase();
+  return VALID_PAGES.includes(path) ? path : 'landing';
+}
+
 export function App() {
-  const [currentPage, setCurrentPage] = useState('landing');
+  const [currentPage, setCurrentPageRaw] = useState(getPageFromUrl);
+
+  const setCurrentPage = (newPage) => {
+    setCurrentPageRaw(newPage);
+    if (typeof window !== 'undefined') {
+      const targetPath = newPage === 'landing' ? '/' : `/${newPage}`;
+      if (window.location.pathname !== targetPath) {
+        window.history.pushState({ page: newPage }, '', targetPath);
+      }
+    }
+  };
+
+  useEffect(() => {
+    const handlePopState = () => {
+      setCurrentPageRaw(getPageFromUrl());
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
   const [theme, setTheme] = useState(() => {
     try {
       return localStorage.getItem('dayshift_theme') || 'dark';

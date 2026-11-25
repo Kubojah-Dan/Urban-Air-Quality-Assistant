@@ -1,7 +1,7 @@
 # DayShift — Constraint-Aware Urban Air Quality Assistant
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](https://github.com/Kubojah-Dan/Urban-Air-Quality-Assistant)
-[![Tests](https://img.shields.io/badge/tests-76%2F76%20passing-brightgreen.svg)](tests)
+[![Tests](https://img.shields.io/badge/tests-77%2F77%20passing-brightgreen.svg)](tests)
 [![Code Style](https://img.shields.io/badge/code%20style-pure%20JavaScript%20ES6+-blue.svg)](https://github.com/Kubojah-Dan/Urban-Air-Quality-Assistant)
 [![Accessibility](https://img.shields.io/badge/accessibility-WCAG%202.2%20AA-success.svg)](docs/ACCESSIBILITY.md)
 [![Privacy](https://img.shields.io/badge/privacy-DPDP%20Act%202023%20%2F%20GDPR-blueviolet.svg)](apps/web/src/features/preferences/pages/PrivacySettingsPage.jsx)
@@ -128,7 +128,7 @@ DayShift/
 │   ├── guidance/                             # Reviewed indoor protocols (EPA/WHO) & CO escalation
 │   └── emissions/                            # Verified ARAI 2024 & EPA MOVES 2024 emission factors
 │
-├── tests/                                    # Automated Vitest test suite (65 tests across 21 files)
+├── tests/                                    # Automated Vitest test suite (77 tests across 24 suites)
 │   ├── unit/                                 # Unit tests (constraints, freshness, emissions boundaries, AQI units)
 │   ├── integration/                          # Integration tests (live AI providers, failover, upstream smoke, UI flow)
 │   ├── security/                             # Security tests (per-user authz, log redaction, prompt injection)
@@ -231,7 +231,7 @@ pnpm --filter @dayshift/web dev
 
 DayShift features an exhaustive, multi-layered automated test suite ensuring reliability, safety, accessibility, and high performance.
 
-### Run All 65 Tests
+### Run All 77 Tests
 ```bash
 pnpm test
 ```

@@ -1,3 +1,5 @@
+import Redis from 'ioredis';
+import { logger } from '../observability/logger.js';
 import { OpenMeteoClient } from '../infrastructure/data-sources/openMeteo/openMeteo.client.js';
 import { OpenMeteoAdapter } from '../infrastructure/data-sources/openMeteo/openMeteo.adapter.js';
 import { AirNowClient } from '../infrastructure/data-sources/airNow/airNow.client.js';
@@ -32,8 +34,31 @@ export function createContainer() {
   const cpcbClient = new CpcbClient(env.CPCB_API_KEY);
   const cpcbAdapter = new CpcbAdapter(cpcbClient);
 
-  const cacheStore = new RedisCacheStore();
-  const preferenceRepository = new FirestorePreferenceRepository();
+  const isPlaceholderRedis =
+    !env.REDIS_URL || env.REDIS_URL.includes('your_redis_host') || env.REDIS_URL.includes('your_token');
+  let redisClient = null;
+  if (env.CACHE_PROVIDER === 'redis' && env.REDIS_URL && !isPlaceholderRedis && env.NODE_ENV !== 'test') {
+    try {
+      redisClient = new Redis(env.REDIS_URL, {
+        lazyConnect: true,
+        maxRetriesPerRequest: 1,
+        connectTimeout: 2000
+      });
+      redisClient.on('error', (err) => {
+        logger.warn('Redis client connection issue, falling back to in-memory store', { error: err.message });
+      });
+    } catch (err) {
+      logger.warn('Failed to initialize Redis client, falling back to in-memory store', { error: err.message });
+    }
+  }
+
+  const cacheStore = new RedisCacheStore(redisClient);
+  const preferenceRepository = new FirestorePreferenceRepository(null);
+
+  logger.info('Infrastructure services initialized', {
+    cacheProvider: cacheStore.client ? 'redis' : 'in-memory-fallback',
+    persistence: preferenceRepository.storageMode
+  });
 
   // 2. AI Providers & Router
   const geminiProvider = new GeminiProvider({

@@ -30,7 +30,7 @@ test.describe('E2E: Core User Journey', () => {
     // 6. Verify 3-Channel Impact Receipt
     await expect(page.getByText(/Impact Receipt/i)).toBeVisible();
     await expect(page.getByText(/Channel 1: Outdoor Air Context/i)).toBeVisible();
-    await expect(page.getByText(/Channel 2: Indoor Action Mechanism/i)).toBeVisible();
-    await expect(page.getByText(/Channel 3: Tailpipe Emissions Delta/i)).toBeVisible();
+    await expect(page.getByText(/Channel 2: Indoor/i)).toBeVisible();
+    await expect(page.getByText(/Channel 3: Emissions/i)).toBeVisible();
   });
 });

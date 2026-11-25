@@ -1,4 +1,5 @@
 import { CacheStore } from '../../ports/CacheStore.js';
+import { logger } from '../../observability/logger.js';
 
 export class RedisCacheStore extends CacheStore {
   constructor(redisClient = null) {
@@ -9,8 +10,12 @@ export class RedisCacheStore extends CacheStore {
 
   async get(key) {
     if (this.client) {
-      const data = await this.client.get(key);
-      return data ? JSON.parse(data) : null;
+      try {
+        const data = await this.client.get(key);
+        return data ? JSON.parse(data) : null;
+      } catch (err) {
+        logger.warn('Redis read failed, falling back to memory store', { error: err.message, key });
+      }
     }
     const item = this.memoryMap.get(key);
     if (!item) return null;
@@ -23,8 +28,12 @@ export class RedisCacheStore extends CacheStore {
 
   async set(key, value, ttlSeconds = 3600) {
     if (this.client) {
-      await this.client.set(key, JSON.stringify(value), 'EX', ttlSeconds);
-      return;
+      try {
+        await this.client.set(key, JSON.stringify(value), 'EX', ttlSeconds);
+        return;
+      } catch (err) {
+        logger.warn('Redis write failed, falling back to memory store', { error: err.message, key });
+      }
     }
     this.memoryMap.set(key, {
       value,

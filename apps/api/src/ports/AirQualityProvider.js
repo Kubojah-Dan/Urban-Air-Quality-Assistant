@@ -3,7 +3,7 @@
  */
 export class AirQualityProvider {
   /**
-   * @param {Object} locationContext
+   * @param {Object} _locationContext
    * @returns {Promise<Array<Object>>}
    */
   async getAirQualityRecords(_locationContext) {

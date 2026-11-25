@@ -3,7 +3,7 @@
  */
 export class GuidanceRepository {
   /**
-   * @param {string} scenario
+   * @param {string} _scenario
    * @returns {Promise<Array<Object>>}
    */
   async getGuidanceForScenario(_scenario) {
