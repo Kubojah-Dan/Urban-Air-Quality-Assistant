@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import request from 'supertest';
 import { createApp } from '../../apps/api/src/app.js';
 import { createContainer } from '../../apps/api/src/composition/createContainer.js';
-import { createTestToken } from '../../apps/api/src/infrastructure/auth/tokenVerifier.js';
+import { createTestToken } from '../helpers/authTestTokens.js';
 
 describe('Security: Authentication, Authorization, Owner Isolation & CORS', () => {
   const container = createContainer();

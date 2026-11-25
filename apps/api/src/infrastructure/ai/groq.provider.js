@@ -1,5 +1,21 @@
 import { ModelProvider } from '../../ports/ModelProvider.js';
 
+export class ProviderError extends Error {
+  /**
+   * @param {string} message
+   * @param {number} [status]
+   * @param {boolean} [retryable]
+   * @param {string|null} [retryAfter]
+   */
+  constructor(message, status = 500, retryable = false, retryAfter = null) {
+    super(message);
+    this.name = 'ProviderError';
+    this.status = status;
+    this.retryable = retryable;
+    this.retryAfter = retryAfter;
+  }
+}
+
 export class GroqProvider extends ModelProvider {
   constructor({
     apiKey = '',
@@ -16,10 +32,7 @@ export class GroqProvider extends ModelProvider {
 
   async generateRankedRecommendation({ systemPrompt, userPrompt }) {
     if (!this.apiKey) {
-      const err = new Error('Groq API key not configured');
-      err.status = 503;
-      err.retryable = false;
-      throw err;
+      throw new ProviderError('Groq API key not configured', 503, false);
     }
 
     const url = `${this.baseUrl}/chat/completions`;
@@ -53,20 +66,18 @@ export class GroqProvider extends ModelProvider {
 
       if (!response.ok) {
         const errorText = await response.text().catch(() => '');
-        const err = new Error(`Groq error (${response.status}): ${errorText.slice(0, 200)}`);
-        err.status = response.status;
-        err.retryable = response.status === 429 || (response.status >= 500 && response.status <= 504);
-        err.retryAfter = response.headers.get('retry-after');
-        throw err;
+        throw new ProviderError(
+          `Groq error (${response.status}): ${errorText.slice(0, 200)}`,
+          response.status,
+          response.status === 429 || (response.status >= 500 && response.status <= 504),
+          response.headers.get('retry-after')
+        );
       }
 
       const data = await response.json();
       const rawText = data.choices?.[0]?.message?.content;
       if (!rawText) {
-        const err = new Error('Groq returned empty choice content');
-        err.status = 502;
-        err.retryable = true;
-        throw err;
+        throw new ProviderError('Groq returned empty choice content', 502, true);
       }
 
       let cleaned = rawText.trim();
@@ -80,10 +91,7 @@ export class GroqProvider extends ModelProvider {
       try {
         parsed = JSON.parse(cleaned);
       } catch {
-        const err = new Error('Groq returned malformed non-JSON payload');
-        err.status = 502;
-        err.retryable = false;
-        throw err;
+        throw new ProviderError('Groq returned malformed non-JSON payload', 502, false);
       }
 
       return {
@@ -93,10 +101,7 @@ export class GroqProvider extends ModelProvider {
       };
     } catch (err) {
       if (err.name === 'AbortError') {
-        const timeoutErr = new Error(`Groq request timed out after ${this.timeoutMs}ms`);
-        timeoutErr.status = 504;
-        timeoutErr.retryable = true;
-        throw timeoutErr;
+        throw new ProviderError(`Groq request timed out after ${this.timeoutMs}ms`, 504, true);
       }
       throw err;
     } finally {
@@ -106,9 +111,7 @@ export class GroqProvider extends ModelProvider {
 
   async generateChatResponse({ systemPrompt, userPrompt }) {
     if (!this.apiKey) {
-      const err = new Error('Groq API key not configured');
-      err.status = 503;
-      throw err;
+      throw new ProviderError('Groq API key not configured', 503, false);
     }
 
     const url = `${this.baseUrl}/chat/completions`;
@@ -140,10 +143,11 @@ export class GroqProvider extends ModelProvider {
 
       if (!response.ok) {
         const errorText = await response.text().catch(() => '');
-        const err = new Error(`Groq error (${response.status}): ${errorText.slice(0, 200)}`);
-        err.status = response.status;
-        err.retryable = response.status === 429 || (response.status >= 500 && response.status <= 504);
-        throw err;
+        throw new ProviderError(
+          `Groq error (${response.status}): ${errorText.slice(0, 200)}`,
+          response.status,
+          response.status === 429 || (response.status >= 500 && response.status <= 504)
+        );
       }
 
       const data = await response.json();

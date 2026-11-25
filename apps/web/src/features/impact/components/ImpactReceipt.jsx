@@ -40,9 +40,15 @@ export function ImpactReceipt({ receipt }) {
           <p className="text-slate-900 dark:text-white font-bold">
             {outdoorContext?.windowDescription || 'Scheduled Activity Window'}
           </p>
-          <p className="text-[11px] text-slate-600 dark:text-cyber-text-secondary">
-            Ambient Pollutant: {outdoorContext?.pollutant} ({Math.round(outdoorContext?.value || 0)} {outdoorContext?.unit})
-          </p>
+          {outdoorContext?.value !== null && outdoorContext?.value !== undefined && Number.isFinite(outdoorContext.value) ? (
+            <p className="text-[11px] text-slate-600 dark:text-cyber-text-secondary">
+              Ambient Pollutant: {outdoorContext?.pollutant || 'PM2.5'} ({Math.round(outdoorContext.value)} {outdoorContext?.unit || 'µg/m³'})
+            </p>
+          ) : (
+            <p className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
+              Ambient Pollutant: {outdoorContext?.pollutant || 'PM2.5'} measurement unavailable
+            </p>
+          )}
           <p className="text-[10px] text-slate-500 dark:text-cyber-text-muted italic">
             Boundary: Ambient outdoor concentration is not an individual's personal inhaled dose.
           </p>
@@ -71,18 +77,18 @@ export function ImpactReceipt({ receipt }) {
             <Factory className="w-3.5 h-3.5 flex-shrink-0" />
             <span>Channel 3: Emissions Estimate</span>
           </div>
-          {emissionsEstimate?.status === 'estimated' ? (
+          {emissionsEstimate?.status === 'estimated' && typeof emissionsEstimate.estimatedTailpipeCo2GramsSaved === 'number' && Number.isFinite(emissionsEstimate.estimatedTailpipeCo2GramsSaved) ? (
             <div>
               <p className="text-cyber-teal font-extrabold text-sm font-display">
                 ~{emissionsEstimate.estimatedTailpipeCo2GramsSaved}g avoided tailpipe CO₂
               </p>
               <p className="text-[10px] text-slate-600 dark:text-cyber-text-secondary mt-0.5">
-                Basis: {emissionsEstimate.basis} • Factor Vintage: {emissionsEstimate.factorVintage || 'ARAI 2024'} ({emissionsEstimate.calculationBoundary})
+                Basis: {emissionsEstimate.basis || 'ARAI 2024 Passenger Vehicle Factor'} • Factor Vintage: {emissionsEstimate.factorVintage || 'ARAI 2024'} ({emissionsEstimate.calculationBoundary || 'Tailpipe CO2 delta only'})
               </p>
             </div>
           ) : (
             <p className="text-slate-500 dark:text-cyber-text-muted italic text-[11px]">
-              {emissionsEstimate?.note || 'Not estimated: reference travel baseline.'}
+              {emissionsEstimate?.note || 'Not estimated: required travel parameters or baseline unavailable.'}
             </p>
           )}
         </div>

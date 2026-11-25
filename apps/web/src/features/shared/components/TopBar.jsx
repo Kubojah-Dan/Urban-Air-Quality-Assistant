@@ -41,7 +41,7 @@ export function TopBar({
     { id: 'routine', label: 'My Routine' },
     { id: 'indoor', label: 'Indoor Air' },
     { id: 'explorer', label: 'Explorer' },
-    { id: 'history', label: 'Impact History' },
+    { id: 'impact', label: 'Impact History' },
     { id: 'assistant', label: 'AI Assistant' }
   ];
 

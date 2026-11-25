@@ -11,6 +11,7 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "noImplicitAny": false,
+    "noImplicitReturns": true,
     "strict": false,
     "types": ["node"]
   },
@@ -22,7 +23,15 @@
     "packages/emissions/src/**/*",
     "apps/api/src/errors/**/*",
     "apps/api/src/ports/**/*",
-    "apps/api/src/application/**/*"
+    "apps/api/src/application/**/*",
+    "apps/api/src/config/**/*",
+    "apps/api/src/infrastructure/auth/**/*",
+    "apps/api/src/infrastructure/cache/**/*",
+    "apps/api/src/infrastructure/persistence/**/*",
+    "apps/api/src/middleware/**/*",
+    "apps/api/src/controllers/**/*",
+    "apps/api/src/composition/**/*",
+    "apps/api/src/infrastructure/data-sources/**/*"
   ],
   "exclude": [
     "node_modules",

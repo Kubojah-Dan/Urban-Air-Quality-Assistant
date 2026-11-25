@@ -39,7 +39,7 @@ export function createContainer() {
   let redisClient = null;
   if (env.CACHE_PROVIDER === 'redis' && env.REDIS_URL && !isPlaceholderRedis && env.NODE_ENV !== 'test') {
     try {
-      redisClient = new Redis(env.REDIS_URL, {
+      redisClient = new (/** @type {any} */ (Redis))(env.REDIS_URL, {
         lazyConnect: true,
         maxRetriesPerRequest: 1,
         connectTimeout: 2000

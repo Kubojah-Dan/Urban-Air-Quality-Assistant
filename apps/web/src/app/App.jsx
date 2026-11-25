@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import ReactDOM from 'react-dom/client';
 import { AppProviders } from './providers.jsx';
 import { AssistantProvider } from '../features/assistant/context/AssistantContext.jsx';
@@ -14,26 +14,54 @@ import { ShieldCheck, AlertCircle, Clock, X } from 'lucide-react';
 import '../styles/globals.css';
 import '../styles/tokens.css';
 
-const VALID_PAGES = ['landing', 'today', 'routine', 'indoor', 'explorer', 'impact', 'assistant', 'privacy', 'onboarding'];
+export const PAGE_MAP = {
+  '': 'landing',
+  '/': 'landing',
+  'landing': 'landing',
+  'overview': 'landing',
+  'today': 'today',
+  'routine': 'routine',
+  'indoor': 'indoor',
+  'explorer': 'explorer',
+  'explore': 'explorer',
+  'impact': 'impact',
+  'history': 'impact',
+  'assistant': 'assistant',
+  'ai': 'assistant',
+  'privacy': 'privacy',
+  'onboarding': 'onboarding'
+};
 
-function getPageFromUrl() {
+export const VALID_PAGES = ['landing', 'today', 'routine', 'indoor', 'explorer', 'impact', 'assistant', 'privacy', 'onboarding'];
+
+export function getPageFromUrl() {
   if (typeof window === 'undefined') return 'landing';
-  const path = window.location.pathname.replace(/^\/+/, '').split('/')[0].toLowerCase();
-  return VALID_PAGES.includes(path) ? path : 'landing';
+  const rawPath = window.location.pathname.replace(/^\/+/, '').split('/')[0].toLowerCase();
+  return PAGE_MAP[rawPath] || 'landing';
+}
+
+export function getPathForPage(page) {
+  const normalized = PAGE_MAP[page] || 'landing';
+  return normalized === 'landing' ? '/' : `/${normalized}`;
 }
 
 export function App() {
   const [currentPage, setCurrentPageRaw] = useState(getPageFromUrl);
 
-  const setCurrentPage = (newPage) => {
-    setCurrentPageRaw(newPage);
-    if (typeof window !== 'undefined') {
-      const targetPath = newPage === 'landing' ? '/' : `/${newPage}`;
-      if (window.location.pathname !== targetPath) {
-        window.history.pushState({ page: newPage }, '', targetPath);
+  const setCurrentPage = useCallback((pageOrFn) => {
+    setCurrentPageRaw((prevPage) => {
+      const resolved = typeof pageOrFn === 'function' ? pageOrFn(prevPage) : pageOrFn;
+      const normalized = PAGE_MAP[resolved] || 'landing';
+
+      if (typeof window !== 'undefined') {
+        const targetPath = getPathForPage(normalized);
+        if (window.location.pathname !== targetPath) {
+          window.history.pushState({ page: normalized }, '', targetPath);
+        }
       }
-    }
-  };
+      return normalized;
+    });
+  }, []);
 
   useEffect(() => {
     const handlePopState = () => {
@@ -41,6 +69,18 @@ export function App() {
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Canonicalize path on mount (e.g. legacy alias /history -> /impact or unknown route -> /)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const rawPath = window.location.pathname.replace(/^\/+/, '').split('/')[0].toLowerCase();
+      const normalized = PAGE_MAP[rawPath] || 'landing';
+      const canonicalPath = getPathForPage(normalized);
+      if (rawPath === 'history' || (!PAGE_MAP[rawPath] && window.location.pathname !== '/')) {
+        window.history.replaceState({ page: normalized }, '', canonicalPath);
+      }
+    }
   }, []);
   const [theme, setTheme] = useState(() => {
     try {

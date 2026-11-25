@@ -35,6 +35,7 @@ const EnvSchema = z.object({
   CPCB_API_KEY: z.string().optional(),
   CACHE_PROVIDER: z.enum(['memory', 'redis']).default('memory'),
   REDIS_URL: z.string().optional(),
+  FIREBASE_PROJECT_ID: z.string().default('dayshift-c76c2'),
   LOG_LEVEL: z.string().default('info')
 });
 

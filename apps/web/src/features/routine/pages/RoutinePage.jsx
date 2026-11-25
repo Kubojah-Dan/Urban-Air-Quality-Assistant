@@ -45,7 +45,7 @@ export function RoutinePage({ initialContext, onSwitchToToday }) {
   const activeCity = location.displayName || 'Delhi, India';
   const { data: planData, isLoading: isPlanLoading, generatePlan } = useRoutinePlan(location);
 
-  // Trigger live initial plan on mount if not yet generated
+  // Trigger live initial plan on mount if not yet generated or when context changes
   useEffect(() => {
     const dep = initialContext?.initialContext?.departureTime || initialContext?.departureTime || '08:30';
     const dead = initialContext?.initialContext?.deadlineTime || initialContext?.deadlineTime || '09:15';
@@ -75,7 +75,13 @@ export function RoutinePage({ initialContext, onSwitchToToday }) {
 
     generatePlan(baseline, location).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.cityId]);
+  }, [
+    location.cityId,
+    initialContext?.initialContext?.commuteMode,
+    initialContext?.initialContext?.departureTime,
+    initialContext?.commuteMode,
+    initialContext?.departureTime
+  ]);
 
   const handleRegenerate = async () => {
     setIsRegenerating(true);
@@ -128,11 +134,31 @@ export function RoutinePage({ initialContext, onSwitchToToday }) {
   const backupCandidate = planData?.candidates?.backup;
   const usualCandidate = planData?.candidates?.usual;
 
-  // Extract live environmental telemetry to dynamically govern daytime schedule
+  // Extract environmental telemetry to dynamically govern daytime schedule
   const records = planData?.evidence?.records || [];
   const pm25Record = records.find((r) => r.pollutant === 'PM2.5');
-  const livePm25 = pm25Record && Number.isFinite(pm25Record.value) ? Math.round(pm25Record.value) : null;
-  const isElevatedAir = livePm25 !== null ? livePm25 > 90 : true;
+  const hasValidPm25 = Boolean(pm25Record && Number.isFinite(pm25Record.value));
+  const livePm25 = hasValidPm25 ? Math.round(pm25Record.value) : null;
+  const isFresh = planData?.evidence?.freshnessState === 'fresh';
+  const pm25Source =
+    pm25Record?.attribution ||
+    (planData?.evidence?.hasStationObservation
+      ? 'CPCB Ground Telemetry'
+      : 'Copernicus CAMS Forecast');
+
+  // Distinguish monitored air quality from precautionary defaults
+  const isPrecautionary = livePm25 === null;
+  const isElevatedAir = livePm25 !== null ? livePm25 > 90 : null;
+
+  // Context-aware commute mode and timing
+  const commuteMode = initialContext?.initialContext?.commuteMode || initialContext?.commuteMode || 'car';
+  const modeLabel = commuteMode.includes('two_wheeler')
+    ? 'motorcycle/scooter'
+    : commuteMode.includes('diesel')
+    ? 'diesel car'
+    : commuteMode.includes('transit')
+    ? 'public transit'
+    : 'petrol car';
 
   const routineItems = [
     {
@@ -141,12 +167,12 @@ export function RoutinePage({ initialContext, onSwitchToToday }) {
       time: recCandidate?.departureWindow?.start || '08:00 AM',
       title: 'Morning Work Commute',
       usual: {
-        action: usualCandidate?.summary || 'Drive solo by petrol car with windows down at 08:30 AM',
+        action: usualCandidate?.summary || `Drive solo by ${modeLabel} with windows down at 08:30 AM`,
         emissions: planData?.impactReceipts?.usual?.tailpipeCo2Grams
           ? `${Math.round(planData.impactReceipts.usual.tailpipeCo2Grams)}g CO₂`
-          : '2,880g CO₂',
+          : 'Not estimated',
         timeImpact: '45 mins',
-        cost: '₹140 petrol',
+        cost: commuteMode.includes('transit') ? '₹40 metro' : '₹140 fuel',
         convenience: 'High convenience, peak traffic stress'
       },
       recommended: {
@@ -155,13 +181,16 @@ export function RoutinePage({ initialContext, onSwitchToToday }) {
         why:
           recCandidate?.explanation ||
           'Morning thermal inversion traps ground-level particulates between 08:30 and 09:30 AM. Leaving 30 mins earlier avoids dense arterial plumes.',
-        evidence: records.length
-          ? `Copernicus CAMS & CPCB (${records.length} monitoring stations) + ARAI 2024`
-          : 'Copernicus CAMS diurnal inversion boundary modeling + ARAI 2024 emission registry',
+        evidence: records.length > 0
+          ? (planData?.evidence?.hasStationObservation
+              ? 'CPCB Ground Telemetry + ARAI 2024 Registry'
+              : 'Copernicus CAMS Diurnal Inversion Modeling + ARAI 2024')
+          : 'Copernicus CAMS Diurnal Inversion Boundary Modeling + ARAI 2024',
         evidenceType: planData?.modelInfo?.provider ? `AI Model: ${planData.modelInfo.provider}` : 'CAMS Forecast Model',
-        emissionsDelta: planData?.impactReceipts?.recommended?.tailpipeCo2Grams
-          ? `Avoids ~${Math.max(0, Math.round((planData.impactReceipts.usual?.tailpipeCo2Grams || 2880) - planData.impactReceipts.recommended.tailpipeCo2Grams))}g CO₂`
-          : 'No tailpipe increase',
+        emissionsDelta:
+          planData?.impactReceipts?.usual?.tailpipeCo2Grams && planData?.impactReceipts?.recommended?.tailpipeCo2Grams
+            ? `Avoids ~${Math.max(0, Math.round(planData.impactReceipts.usual.tailpipeCo2Grams - planData.impactReceipts.recommended.tailpipeCo2Grams))}g CO₂`
+            : 'Not estimated',
         timeDelta: '0 min net travel delay (arrives early at 08:45 AM)',
         costDelta: 'Same fuel cost',
         convenienceTradeoff: 'Requires waking 30m earlier; saves 15 mins congestion delay'
@@ -173,9 +202,10 @@ export function RoutinePage({ initialContext, onSwitchToToday }) {
           'Electric underground rolling stock bypasses ground traffic and diesel exhaust entirely.',
         evidence: 'CPCB roadside vs Metro station indoor PM2.5 monitoring',
         evidenceType: 'Observed Telemetry',
-        emissionsDelta: planData?.impactReceipts?.backup?.tailpipeCo2Grams
-          ? `Avoids ~${Math.max(0, Math.round((planData.impactReceipts.usual?.tailpipeCo2Grams || 2880) - planData.impactReceipts.backup.tailpipeCo2Grams))}g CO₂`
-          : 'Avoids ~2,650g CO₂ (ARAI 2024)',
+        emissionsDelta:
+          planData?.impactReceipts?.usual?.tailpipeCo2Grams && planData?.impactReceipts?.backup?.tailpipeCo2Grams
+            ? `Avoids ~${Math.max(0, Math.round(planData.impactReceipts.usual.tailpipeCo2Grams - planData.impactReceipts.backup.tailpipeCo2Grams))}g CO₂`
+            : 'Not estimated',
         timeDelta: '-5 min travel time',
         costDelta: 'Saves ₹90 per round trip',
         convenienceTradeoff: 'Requires 7-min walking; avoids traffic jams'
@@ -194,14 +224,24 @@ export function RoutinePage({ initialContext, onSwitchToToday }) {
         convenience: 'Directly curbside'
       },
       recommended: {
-        action: isElevatedAir
+        action: isPrecautionary
+          ? 'Indoor break area with mechanical filtration (precautionary recommendation)'
+          : isElevatedAir
           ? 'Indoor ventilated cafeteria with mechanical filtration'
           : 'Use interior courtyard or tree-shaded venue 80m from traffic',
-        why: isElevatedAir
-          ? `Ambient PM2.5 is elevated (${livePm25 !== null ? `${livePm25} µg/m³` : 'high'}). Staying in filtered indoor air prevents curbside diesel and road-dust inhalation.`
-          : 'Curbside coarse particulate concentration drops steeply 50-80 meters away from arterial road lanes.',
-        evidence: `CPCB & EPA roadside dispersion gradient literature (50m boundary effect, local PM2.5: ${livePm25 !== null ? `${livePm25} µg/m³` : 'monitored'})`,
-        evidenceType: 'Dispersion Gradient Telemetry',
+        why: isPrecautionary
+          ? 'PM2.5 measurement unavailable for this location. As a precautionary measure, staying in filtered indoor air minimizes potential exposure to unmonitored arterial plumes.'
+          : isElevatedAir
+          ? `Ambient PM2.5 is monitored at ${livePm25} µg/m³ (elevated). Staying in filtered indoor air prevents curbside diesel and road-dust inhalation.`
+          : `Ambient PM2.5 is monitored at ${livePm25} µg/m³ (acceptable). Curbside coarse particulate concentration drops steeply 50-80 meters away from arterial road lanes.`,
+        evidence: isPrecautionary
+          ? 'Precautionary Public Health Protocol (Ambient PM2.5 unavailable)'
+          : `${pm25Source} (measured PM2.5: ${livePm25} µg/m³)`,
+        evidenceType: isPrecautionary
+          ? 'Precautionary Guidance'
+          : isFresh
+          ? 'Observed Telemetry'
+          : 'Cached Telemetry',
         emissionsDelta: 'Zero emissions',
         timeDelta: isElevatedAir ? '0 min walk' : '+2 min walk',
         costDelta: 'No cost delta',
@@ -231,14 +271,24 @@ export function RoutinePage({ initialContext, onSwitchToToday }) {
         convenience: 'Passive'
       },
       recommended: {
-        action: isElevatedAir
+        action: isPrecautionary
+          ? 'Maintain filtered indoor circulation with sealed windows (precautionary)'
+          : isElevatedAir
           ? 'Run mechanical HEPA filtration on medium speed continuously'
           : 'Open opposite windows for 20-30 minutes for cross-ventilation',
-        why: isElevatedAir
-          ? `Because ambient particulate levels remain high (${livePm25 !== null ? `${livePm25} µg/m³` : 'monitored'}), avoid open windows; use mechanical HEPA cleaning instead.`
-          : 'Solar heating expands planetary boundary layer, creating the day’s lowest ambient PM2.5 trough. Flushes indoor CO2 safely.',
-        evidence: 'Copernicus CAMS daytime boundary layer height observations',
-        evidenceType: 'Observed + Forecast',
+        why: isPrecautionary
+          ? 'PM2.5 measurement unavailable. Without verified ambient air quality readings, keeping windows closed with mechanical filtration provides the safest exposure baseline.'
+          : isElevatedAir
+          ? `Because ambient particulate levels remain elevated (${livePm25} µg/m³), avoid open windows; use mechanical HEPA cleaning instead.`
+          : `Ambient particulate levels are lower (${livePm25} µg/m³). Solar heating expands planetary boundary layer, creating the day’s lowest ambient PM2.5 trough. Flushes indoor CO2 safely.`,
+        evidence: isPrecautionary
+          ? 'WHO Indoor Air Quality & Precautionary Guidance'
+          : `${pm25Source} + CAMS boundary layer modeling`,
+        evidenceType: isPrecautionary
+          ? 'Precautionary Guidance'
+          : isFresh
+          ? 'Observed Telemetry'
+          : 'Cached Telemetry',
         emissionsDelta: isElevatedAir ? '~15g CO₂ (electricity)' : 'Zero emissions',
         timeDelta: '2 mins to adjust',
         costDelta: isElevatedAir ? '₹3 electricity/day' : 'Zero cost',
@@ -261,12 +311,12 @@ export function RoutinePage({ initialContext, onSwitchToToday }) {
       time: '06:15 PM',
       title: 'Evening Return Commute',
       usual: {
-        action: 'Drive solo in peak stop-and-go congestion 06:15 - 07:20 PM',
+        action: `Drive solo by ${modeLabel} in peak stop-and-go congestion 06:15 - 07:20 PM`,
         emissions: planData?.impactReceipts?.usual?.tailpipeCo2Grams
           ? `${Math.round(planData.impactReceipts.usual.tailpipeCo2Grams * 1.05)}g CO₂`
-          : '3,100g CO₂',
+          : 'Not estimated',
         timeImpact: '65 mins',
-        cost: '₹150 petrol',
+        cost: commuteMode.includes('transit') ? '₹40 metro' : '₹150 fuel',
         convenience: 'High initial convenience, heavy fatigue'
       },
       recommended: {
@@ -274,7 +324,9 @@ export function RoutinePage({ initialContext, onSwitchToToday }) {
         why: '30-minute departure delay bypasses peak bottleneck crawl, reducing vehicle idling time, brake dust exposure, and localized exhaust plumes.',
         evidence: 'TomTom & CPCB peak congestion curves for metro corridors + ARAI 2024 emissions registry',
         evidenceType: 'ARAI 2024 Factor + Telemetry',
-        emissionsDelta: 'Avoids ~600g CO₂ from reduced idling',
+        emissionsDelta: planData?.impactReceipts?.usual?.tailpipeCo2Grams
+          ? 'Avoids ~15-20% tailpipe CO₂ by eliminating stop-and-go idling'
+          : 'Not estimated',
         timeDelta: '-15 mins in vehicle congestion',
         costDelta: 'Saves ₹25 fuel',
         convenienceTradeoff: 'Requires staying at work or venue 30 mins later'
@@ -284,7 +336,9 @@ export function RoutinePage({ initialContext, onSwitchToToday }) {
         why: 'Cuts per-passenger emissions by 50-80% while avoiding peak roadway stress.',
         evidence: 'ARAI 2024 passenger occupancy factors',
         evidenceType: 'ARAI 2024 Factor',
-        emissionsDelta: 'Avoids ~1,500g CO₂',
+        emissionsDelta: planData?.impactReceipts?.usual?.tailpipeCo2Grams
+          ? `Avoids ~${Math.round(planData.impactReceipts.usual.tailpipeCo2Grams * 0.5)}g CO₂`
+          : 'Not estimated',
         timeDelta: 'Same 45 mins',
         costDelta: 'Splits fuel cost in half',
         convenienceTradeoff: 'Requires coordinating departure time'
@@ -310,25 +364,48 @@ export function RoutinePage({ initialContext, onSwitchToToday }) {
     outdoorContext: {
       windowDescription: 'Daily Routine Commute & Activity Window',
       pollutant: 'PM2.5',
-      value: livePm25 || 42,
-      unit: 'µg/m³'
+      value: livePm25,
+      unit: 'µg/m³',
+      status: livePm25 !== null ? 'measured' : 'unavailable',
+      note: livePm25 === null ? 'PM2.5 measurement unavailable' : undefined
     },
     indoorAction: {
-      actionTitle: 'Cabin Recirculation & Source Control',
-      mechanism: 'Vehicle AC cabin recirculation (50-70% filtration) + HEPA indoor source-control',
-      avoidWhen: ['Windows down in arterial traffic']
+      actionTitle: isPrecautionary
+        ? 'Precautionary Indoor Filtration & Source Control'
+        : isElevatedAir
+        ? 'Sealed Mechanical HEPA Recirculation'
+        : 'Controlled Cross-Ventilation During Cleaner Afternoon Window',
+      mechanism: isPrecautionary ? 'filtration' : isElevatedAir ? 'filtration' : 'exhaust_ventilation',
+      avoidWhen: isElevatedAir || isPrecautionary ? ['Opening windows during peak arterial traffic'] : []
     },
     emissionsEstimate: {
-      status: 'estimated',
-      estimatedTailpipeCo2GramsSaved: planData?.impactReceipts?.recommended?.tailpipeCo2Grams
-        ? Math.max(0, Math.round((planData?.impactReceipts?.usual?.tailpipeCo2Grams || 2880) - planData.impactReceipts.recommended.tailpipeCo2Grams))
-        : 380,
+      status:
+        planData?.impactReceipts?.recommended?.tailpipeCo2Grams &&
+        planData?.impactReceipts?.usual?.tailpipeCo2Grams
+          ? 'estimated'
+          : 'not_estimated',
+      estimatedTailpipeCo2GramsSaved:
+        planData?.impactReceipts?.recommended?.tailpipeCo2Grams &&
+        planData?.impactReceipts?.usual?.tailpipeCo2Grams
+          ? Math.max(
+              0,
+              Math.round(
+                planData.impactReceipts.usual.tailpipeCo2Grams -
+                  planData.impactReceipts.recommended.tailpipeCo2Grams
+              )
+            )
+          : null,
+      note:
+        planData?.impactReceipts?.recommended?.tailpipeCo2Grams &&
+        planData?.impactReceipts?.usual?.tailpipeCo2Grams
+          ? undefined
+          : 'Not estimated: reference travel baseline or verified emissions delta unavailable.',
       basis: 'ARAI 2024 Passenger Vehicle Factor',
       factorVintage: 'ARAI 2024',
-      calculationBoundary: 'Tailpipe CO2/PM delta only'
+      calculationBoundary: 'Tailpipe CO2 delta only'
     },
     assumptions: ['Standard urban stop-and-go drive cycle', 'Passenger occupancy = 1'],
-    unknowns: ['Localized construction dust plumes', 'Temporary traffic diversions']
+    unknowns: ['Personal breathing exertion rate and street-level microclimate are unmeasured.']
   };
 
   const activeReceipt =
@@ -385,7 +462,7 @@ export function RoutinePage({ initialContext, onSwitchToToday }) {
       <div className="p-3 rounded-2xl bg-teal-500/5 dark:bg-cyber-teal/5 border border-cyber-teal/20 flex items-start gap-2.5 text-[11px]">
         <Sparkles className="w-4 h-4 text-cyber-teal shrink-0 mt-0.5" />
         <p className="text-slate-700 dark:text-cyber-text-secondary leading-relaxed">
-          <strong className="text-slate-900 dark:text-white">Evidence-Driven Schedule:</strong> Commute step 1 is synthesized by the {planData?.modelInfo?.provider || 'ARAI 2024'} engine. Midday, afternoon, and evening recommendations dynamically adjust based on live ambient PM2.5 ({livePm25 !== null ? `${livePm25} µg/m³` : 'monitored telemetry'}) and WHO/EPA indoor protocols.
+          <strong className="text-slate-900 dark:text-white">Evidence-Driven Schedule:</strong> Commute step 1 is synthesized by the {planData?.modelInfo?.provider || 'ARAI 2024'} engine. Midday, afternoon, and evening recommendations dynamically adjust based on {livePm25 !== null ? `live ambient PM2.5 (${livePm25} µg/m³)` : 'precautionary protocols (PM2.5 measurement unavailable)'} and WHO/EPA indoor guidance.
         </p>
       </div>
 

@@ -158,7 +158,7 @@ DayShift/
 | **Deterministic Fallback** | Pure Domain Candidate Engine | Instant, rule-based fallback if all AI providers fail or trip the circuit breaker. |
 | **Data Sources** | Copernicus CAMS / Open-Meteo, AirNow, CPCB | Real hourly PM₂.₅ forecasts and regulatory station readings with honest provenance. |
 | **Cache & Quota** | Redis (`ioredis`) + In-Memory Fallback | Dual-mode distributed caching for Cloud Run with automatic memory fallback for local dev. |
-| **Persistence** | Google Cloud Firestore | Per-user document isolation (`users/{userId}/*`), denying direct client writes to server data. |
+| **Persistence** | Firestore-compatible / In-Memory Store | Per-user document isolation with Clean Architecture repository. In local/serverless deployments without cloud credentials, operates in an explicit isolated in-memory store (`storageMode: 'in-memory'`) with zero false claims of cloud persistence. |
 | **Secrets** | Google Secret Manager + `.env` | Server-side only; zero client bundle leakage. |
 
 ---

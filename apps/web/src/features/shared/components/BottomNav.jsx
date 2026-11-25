@@ -14,7 +14,7 @@ export function BottomNav({ activeTab, onChangeTab }) {
     { id: 'routine', label: 'Routine', icon: Calendar },
     { id: 'indoor', label: 'Indoor', icon: Wind },
     { id: 'explorer', label: 'Explore', icon: Compass },
-    { id: 'history', label: 'Impact', icon: FileText }
+    { id: 'impact', label: 'Impact', icon: FileText }
   ];
 
   return (

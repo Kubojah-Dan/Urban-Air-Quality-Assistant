@@ -25,8 +25,7 @@ const IGNORED_SEGMENTS = [
   'package-lock.json',
   'pnpm-lock.yaml',
   'tests/security/secret-scanning.test.js',
-  'tests/helpers/authTestTokens.js',
-  'apps/api/src/infrastructure/auth/tokenVerifier.js'
+  'tests/helpers/authTestTokens.js'
 ];
 
 function shouldIgnore(relPath) {

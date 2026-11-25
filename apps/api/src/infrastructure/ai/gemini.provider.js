@@ -1,5 +1,21 @@
 import { ModelProvider } from '../../ports/ModelProvider.js';
 
+export class ProviderError extends Error {
+  /**
+   * @param {string} message
+   * @param {number} [status]
+   * @param {boolean} [retryable]
+   * @param {string|null} [retryAfter]
+   */
+  constructor(message, status = 500, retryable = false, retryAfter = null) {
+    super(message);
+    this.name = 'ProviderError';
+    this.status = status;
+    this.retryable = retryable;
+    this.retryAfter = retryAfter;
+  }
+}
+
 export class GeminiProvider extends ModelProvider {
   constructor({
     apiKey = '',
@@ -14,10 +30,7 @@ export class GeminiProvider extends ModelProvider {
 
   async generateRankedRecommendation({ systemPrompt, userPrompt }) {
     if (!this.apiKey) {
-      const err = new Error('Gemini API key not configured');
-      err.status = 503;
-      err.retryable = false;
-      throw err;
+      throw new ProviderError('Gemini API key not configured', 503, false);
     }
 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${this.model}:generateContent?key=${this.apiKey}`;
@@ -49,20 +62,18 @@ export class GeminiProvider extends ModelProvider {
 
       if (!response.ok) {
         const errorText = await response.text().catch(() => '');
-        const err = new Error(`Gemini error (${response.status}): ${errorText.slice(0, 200)}`);
-        err.status = response.status;
-        err.retryable = response.status === 429 || (response.status >= 500 && response.status <= 504);
-        err.retryAfter = response.headers.get('retry-after');
-        throw err;
+        throw new ProviderError(
+          `Gemini error (${response.status}): ${errorText.slice(0, 200)}`,
+          response.status,
+          response.status === 429 || (response.status >= 500 && response.status <= 504),
+          response.headers.get('retry-after')
+        );
       }
 
       const data = await response.json();
       const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
       if (!rawText) {
-        const err = new Error('Gemini returned empty candidate response');
-        err.status = 502;
-        err.retryable = true;
-        throw err;
+        throw new ProviderError('Gemini returned empty candidate response', 502, true);
       }
 
       let cleaned = rawText.trim();
@@ -76,10 +87,7 @@ export class GeminiProvider extends ModelProvider {
       try {
         parsed = JSON.parse(cleaned);
       } catch {
-        const err = new Error('Gemini returned malformed non-JSON payload');
-        err.status = 502;
-        err.retryable = false;
-        throw err;
+        throw new ProviderError('Gemini returned malformed non-JSON payload', 502, false);
       }
 
       return {
@@ -89,10 +97,7 @@ export class GeminiProvider extends ModelProvider {
       };
     } catch (err) {
       if (err.name === 'AbortError') {
-        const timeoutErr = new Error(`Gemini request timed out after ${this.timeoutMs}ms`);
-        timeoutErr.status = 504;
-        timeoutErr.retryable = true;
-        throw timeoutErr;
+        throw new ProviderError(`Gemini request timed out after ${this.timeoutMs}ms`, 504, true);
       }
       throw err;
     } finally {
@@ -102,9 +107,7 @@ export class GeminiProvider extends ModelProvider {
 
   async generateChatResponse({ systemPrompt, userPrompt }) {
     if (!this.apiKey) {
-      const err = new Error('Gemini API key not configured');
-      err.status = 503;
-      throw err;
+      throw new ProviderError('Gemini API key not configured', 503, false);
     }
 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${this.model}:generateContent?key=${this.apiKey}`;
@@ -135,10 +138,11 @@ export class GeminiProvider extends ModelProvider {
 
       if (!response.ok) {
         const errorText = await response.text().catch(() => '');
-        const err = new Error(`Gemini error (${response.status}): ${errorText.slice(0, 200)}`);
-        err.status = response.status;
-        err.retryable = response.status === 429 || (response.status >= 500 && response.status <= 504);
-        throw err;
+        throw new ProviderError(
+          `Gemini error (${response.status}): ${errorText.slice(0, 200)}`,
+          response.status,
+          response.status === 429 || (response.status >= 500 && response.status <= 504)
+        );
       }
 
       const data = await response.json();

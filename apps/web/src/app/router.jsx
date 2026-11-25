@@ -106,7 +106,7 @@ export function AppRouter({
       )}
 
       {/* Screen I: Impact History */}
-      {currentPage === 'history' && <ImpactHistoryPage />}
+      {(currentPage === 'impact' || currentPage === 'history') && <ImpactHistoryPage />}
 
       {/* Screen G: Environmental AI Assistant */}
       {currentPage === 'assistant' && (
