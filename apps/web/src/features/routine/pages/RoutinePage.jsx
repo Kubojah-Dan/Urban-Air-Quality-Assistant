@@ -13,6 +13,7 @@ import {
 import { RouteComparison } from '../components/RouteComparison.jsx';
 import { ImpactReceipt } from '../../impact/components/ImpactReceipt.jsx';
 import { useRoutinePlan } from '../hooks/useRoutinePlan.js';
+import { evaluateRecordProvenance } from '../utils/provenance.js';
 
 /**
  * RoutinePage
@@ -49,17 +50,42 @@ export function RoutinePage({ initialContext, onSwitchToToday }) {
   useEffect(() => {
     const dep = initialContext?.initialContext?.departureTime || initialContext?.departureTime || '08:30';
     const dead = initialContext?.initialContext?.deadlineTime || initialContext?.deadlineTime || '09:15';
+    const mode = initialContext?.initialContext?.commuteMode || initialContext?.commuteMode || 'car';
     const baseline = {
       id: `base_${Date.now()}`,
       activityType: 'commute',
       activities: [
         {
           id: 'act_1',
-          name: 'Daily Commute',
+          name: 'Morning Work Commute',
           type: 'commute',
           startWindow: dep,
           endWindow: dead,
-          mode: initialContext?.initialContext?.commuteMode || initialContext?.commuteMode || 'car'
+          mode,
+          distanceKm: 10
+        },
+        {
+          id: 'act_break_morning',
+          name: 'Morning Outdoor Break',
+          type: 'outdoor_activity',
+          startWindow: '10:30',
+          endWindow: '10:45'
+        },
+        {
+          id: 'act_ventilation_afternoon',
+          name: 'Afternoon Ventilation & Walk',
+          type: 'indoor_routine',
+          startWindow: '13:00',
+          endWindow: '13:30'
+        },
+        {
+          id: 'act_commute_evening',
+          name: 'Evening Return Commute',
+          type: 'commute',
+          startWindow: '18:00',
+          endWindow: '19:00',
+          mode,
+          distanceKm: 10
         }
       ],
       constraints: [
@@ -88,17 +114,42 @@ export function RoutinePage({ initialContext, onSwitchToToday }) {
     try {
       const dep = initialContext?.initialContext?.departureTime || initialContext?.departureTime || '08:30';
       const dead = initialContext?.initialContext?.deadlineTime || initialContext?.deadlineTime || '09:15';
+      const mode = initialContext?.initialContext?.commuteMode || initialContext?.commuteMode || 'car';
       const baseline = {
         id: `base_${Date.now()}`,
         activityType: 'commute',
         activities: [
           {
             id: 'act_1',
-            name: 'Daily Commute',
+            name: 'Morning Work Commute',
             type: 'commute',
             startWindow: dep,
             endWindow: dead,
-            mode: initialContext?.initialContext?.commuteMode || initialContext?.commuteMode || 'car'
+            mode,
+            distanceKm: 10
+          },
+          {
+            id: 'act_break_morning',
+            name: 'Morning Outdoor Break',
+            type: 'outdoor_activity',
+            startWindow: '10:30',
+            endWindow: '10:45'
+          },
+          {
+            id: 'act_ventilation_afternoon',
+            name: 'Afternoon Ventilation & Walk',
+            type: 'indoor_routine',
+            startWindow: '13:00',
+            endWindow: '13:30'
+          },
+          {
+            id: 'act_commute_evening',
+            name: 'Evening Return Commute',
+            type: 'commute',
+            startWindow: '18:00',
+            endWindow: '19:00',
+            mode,
+            distanceKm: 10
           }
         ],
         constraints: [
@@ -134,21 +185,14 @@ export function RoutinePage({ initialContext, onSwitchToToday }) {
   const backupCandidate = planData?.candidates?.backup;
   const usualCandidate = planData?.candidates?.usual;
 
-  // Extract environmental telemetry to dynamically govern daytime schedule
+  // Extract environmental telemetry and evaluate individual record provenance
   const records = planData?.evidence?.records || [];
   const pm25Record = records.find((r) => r.pollutant === 'PM2.5');
-  const hasValidPm25 = Boolean(pm25Record && Number.isFinite(pm25Record.value));
-  const livePm25 = hasValidPm25 ? Math.round(pm25Record.value) : null;
-  const isFresh = planData?.evidence?.freshnessState === 'fresh';
-  const pm25Source =
-    pm25Record?.attribution ||
-    (planData?.evidence?.hasStationObservation
-      ? 'CPCB Ground Telemetry'
-      : 'Copernicus CAMS Forecast');
-
-  // Distinguish monitored air quality from precautionary defaults
-  const isPrecautionary = livePm25 === null;
+  const pm25Provenance = evaluateRecordProvenance(pm25Record);
+  const livePm25 = pm25Provenance.value;
+  const isPrecautionary = pm25Provenance.isPrecautionary;
   const isElevatedAir = livePm25 !== null ? livePm25 > 90 : null;
+  const pm25Source = pm25Provenance.attribution;
 
   // Context-aware commute mode and timing
   const commuteMode = initialContext?.initialContext?.commuteMode || initialContext?.commuteMode || 'car';
@@ -236,12 +280,8 @@ export function RoutinePage({ initialContext, onSwitchToToday }) {
           : `Ambient PM2.5 is monitored at ${livePm25} µg/m³ (acceptable). Curbside coarse particulate concentration drops steeply 50-80 meters away from arterial road lanes.`,
         evidence: isPrecautionary
           ? 'Precautionary Public Health Protocol (Ambient PM2.5 unavailable)'
-          : `${pm25Source} (measured PM2.5: ${livePm25} µg/m³)`,
-        evidenceType: isPrecautionary
-          ? 'Precautionary Guidance'
-          : isFresh
-          ? 'Observed Telemetry'
-          : 'Cached Telemetry',
+          : `${pm25Source} (${pm25Provenance.displayLabel})`,
+        evidenceType: pm25Provenance.sourceType,
         emissionsDelta: 'Zero emissions',
         timeDelta: isElevatedAir ? '0 min walk' : '+2 min walk',
         costDelta: 'No cost delta',
@@ -284,11 +324,7 @@ export function RoutinePage({ initialContext, onSwitchToToday }) {
         evidence: isPrecautionary
           ? 'WHO Indoor Air Quality & Precautionary Guidance'
           : `${pm25Source} + CAMS boundary layer modeling`,
-        evidenceType: isPrecautionary
-          ? 'Precautionary Guidance'
-          : isFresh
-          ? 'Observed Telemetry'
-          : 'Cached Telemetry',
+        evidenceType: pm25Provenance.sourceType,
         emissionsDelta: isElevatedAir ? '~15g CO₂ (electricity)' : 'Zero emissions',
         timeDelta: '2 mins to adjust',
         costDelta: isElevatedAir ? '₹3 electricity/day' : 'Zero cost',
@@ -308,40 +344,36 @@ export function RoutinePage({ initialContext, onSwitchToToday }) {
     {
       id: 4,
       segment: 'evening',
-      time: '06:15 PM',
+      time: recCandidate?.eveningCommute?.departureTime ? `${recCandidate.eveningCommute.departureTime}` : '06:45 PM',
       title: 'Evening Return Commute',
       usual: {
-        action: `Drive solo by ${modeLabel} in peak stop-and-go congestion 06:15 - 07:20 PM`,
-        emissions: planData?.impactReceipts?.usual?.tailpipeCo2Grams
-          ? `${Math.round(planData.impactReceipts.usual.tailpipeCo2Grams * 1.05)}g CO₂`
-          : 'Not estimated',
-        timeImpact: '65 mins',
-        cost: commuteMode.includes('transit') ? '₹40 metro' : '₹150 fuel',
-        convenience: 'High initial convenience, heavy fatigue'
+        action: usualCandidate?.eveningCommute?.action || `Drive solo by ${modeLabel} in peak stop-and-go congestion 06:00 - 07:05 PM`,
+        emissions: usualCandidate?.eveningCommute?.emissions || (planData?.impactReceipts?.usual?.tailpipeCo2Grams
+          ? `${Math.round(planData.impactReceipts.usual.tailpipeCo2Grams * 1.15)}g CO₂`
+          : 'Not estimated'),
+        timeImpact: `${usualCandidate?.eveningCommute?.durationMinutes || 65} mins (peak crawl)`,
+        cost: usualCandidate?.eveningCommute?.cost || (commuteMode.includes('transit') ? '₹40 metro' : '₹150 fuel'),
+        convenience: usualCandidate?.eveningCommute?.convenience || 'High convenience, heavy traffic fatigue and idling exhaust exposure'
       },
       recommended: {
-        action: 'Depart 30 mins later (06:45 PM) or shift to Metro transit with AC on cabin recirculation',
-        why: '30-minute departure delay bypasses peak bottleneck crawl, reducing vehicle idling time, brake dust exposure, and localized exhaust plumes.',
-        evidence: 'TomTom & CPCB peak congestion curves for metro corridors + ARAI 2024 emissions registry',
-        evidenceType: 'ARAI 2024 Factor + Telemetry',
-        emissionsDelta: planData?.impactReceipts?.usual?.tailpipeCo2Grams
-          ? 'Avoids ~15-20% tailpipe CO₂ by eliminating stop-and-go idling'
-          : 'Not estimated',
-        timeDelta: '-15 mins in vehicle congestion',
-        costDelta: 'Saves ₹25 fuel',
-        convenienceTradeoff: 'Requires staying at work or venue 30 mins later'
+        action: recCandidate?.eveningCommute?.action || 'Depart 45 mins later (06:45 PM) with AC on recirculation to bypass arterial bottleneck crawl',
+        why: recCandidate?.eveningCommute?.why || 'Evening thermal inversion descends around 18:00, trapping vehicle exhaust. Delaying departure by 45 mins clears stop-and-go bottlenecks and cuts in-cabin tailpipe exposure.',
+        evidence: 'CPCB peak corridor congestion data + ARAI 2024 emissions registry + Diurnal inversion curve',
+        evidenceType: 'ARAI 2024 Factor + Diurnal Model',
+        emissionsDelta: recCandidate?.eveningCommute?.emissionsDelta || 'Avoids ~15-20% tailpipe CO₂ by eliminating stop-and-go idling waste',
+        timeDelta: recCandidate?.eveningCommute?.timeDelta || '-25 mins in vehicle congestion delay',
+        costDelta: recCandidate?.eveningCommute?.costDelta || 'Saves ~₹25 fuel from eliminated idling',
+        convenienceTradeoff: recCandidate?.eveningCommute?.convenienceTradeoff || 'Requires remaining at workspace or venue 45 minutes later'
       },
       alternative: {
-        action: 'Carpool with colleague or take Metro Rail line',
-        why: 'Cuts per-passenger emissions by 50-80% while avoiding peak roadway stress.',
-        evidence: 'ARAI 2024 passenger occupancy factors',
+        action: backupCandidate?.eveningCommute?.action || 'Carpool with colleague or take Metro Rail line',
+        why: backupCandidate?.eveningCommute?.why || 'Cuts per-passenger emissions by 50-70% while avoiding peak roadway stress and ground-level diesel plumes.',
+        evidence: 'ARAI 2024 passenger occupancy factors & urban transit energy benchmark',
         evidenceType: 'ARAI 2024 Factor',
-        emissionsDelta: planData?.impactReceipts?.usual?.tailpipeCo2Grams
-          ? `Avoids ~${Math.round(planData.impactReceipts.usual.tailpipeCo2Grams * 0.5)}g CO₂`
-          : 'Not estimated',
-        timeDelta: 'Same 45 mins',
-        costDelta: 'Splits fuel cost in half',
-        convenienceTradeoff: 'Requires coordinating departure time'
+        emissionsDelta: backupCandidate?.eveningCommute?.emissionsDelta || 'Avoids ~50% tailpipe CO₂ per passenger',
+        timeDelta: backupCandidate?.eveningCommute?.timeDelta || '-15 mins congestion delay',
+        costDelta: backupCandidate?.eveningCommute?.costDelta || 'Splits travel cost or saves ₹90 round trip',
+        convenienceTradeoff: backupCandidate?.eveningCommute?.convenienceTradeoff || 'Requires coordinating departure time with carpool colleague'
       }
     }
   ];
@@ -366,8 +398,20 @@ export function RoutinePage({ initialContext, onSwitchToToday }) {
       pollutant: 'PM2.5',
       value: livePm25,
       unit: 'µg/m³',
-      status: livePm25 !== null ? 'measured' : 'unavailable',
-      note: livePm25 === null ? 'PM2.5 measurement unavailable' : undefined
+      status: pm25Provenance.status === 'live_observation'
+        ? 'measured'
+        : pm25Provenance.status === 'forecast'
+        ? 'forecast'
+        : pm25Provenance.status === 'cached'
+        ? 'cached'
+        : pm25Provenance.status === 'stale'
+        ? 'stale'
+        : 'unavailable',
+      note: pm25Provenance.isPrecautionary
+        ? 'PM2.5 measurement unavailable'
+        : pm25Provenance.isForecast
+        ? 'Forecast estimate based on numerical atmospheric modeling; not a ground-sensor observation.'
+        : undefined
     },
     indoorAction: {
       actionTitle: isPrecautionary
@@ -461,9 +505,22 @@ export function RoutinePage({ initialContext, onSwitchToToday }) {
       {/* Evidence-Driven Schedule Provenance Banner */}
       <div className="p-3 rounded-2xl bg-teal-500/5 dark:bg-cyber-teal/5 border border-cyber-teal/20 flex items-start gap-2.5 text-[11px]">
         <Sparkles className="w-4 h-4 text-cyber-teal shrink-0 mt-0.5" />
-        <p className="text-slate-700 dark:text-cyber-text-secondary leading-relaxed">
-          <strong className="text-slate-900 dark:text-white">Evidence-Driven Schedule:</strong> Commute step 1 is synthesized by the {planData?.modelInfo?.provider || 'ARAI 2024'} engine. Midday, afternoon, and evening recommendations dynamically adjust based on {livePm25 !== null ? `live ambient PM2.5 (${livePm25} µg/m³)` : 'precautionary protocols (PM2.5 measurement unavailable)'} and WHO/EPA indoor guidance.
-        </p>
+        <div className="text-slate-700 dark:text-cyber-text-secondary leading-relaxed space-y-1">
+          <p>
+            <strong className="text-slate-900 dark:text-white">Evidence-Driven Daily Schedule:</strong> Both morning and evening return commutes are dynamically calculated from your commute constraints and ARAI 2024 emissions factors. Midday activities adapt to verified air quality evidence:
+          </p>
+          <div className="flex flex-wrap items-center gap-2 pt-0.5">
+            <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold border ${pm25Provenance.badgeStyle}`}>
+              {pm25Provenance.badgeText}
+            </span>
+            <span className="text-slate-800 dark:text-white font-medium">
+              {pm25Provenance.displayLabel}
+            </span>
+            <span className="text-slate-500 dark:text-cyber-text-muted">
+              • Source: {pm25Provenance.attribution}
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* Routine Comparison 3-Way Selector */}

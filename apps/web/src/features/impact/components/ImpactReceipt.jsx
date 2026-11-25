@@ -43,6 +43,15 @@ export function ImpactReceipt({ receipt }) {
           {outdoorContext?.value !== null && outdoorContext?.value !== undefined && Number.isFinite(outdoorContext.value) ? (
             <p className="text-[11px] text-slate-600 dark:text-cyber-text-secondary">
               Ambient Pollutant: {outdoorContext?.pollutant || 'PM2.5'} ({Math.round(outdoorContext.value)} {outdoorContext?.unit || 'µg/m³'})
+              {outdoorContext?.status === 'forecast' || outdoorContext?.recordKind === 'forecast' ? (
+                <span className="ml-1.5 text-[10px] text-sky-600 dark:text-sky-400 font-semibold">• Numerical Forecast</span>
+              ) : outdoorContext?.status === 'stale' || outdoorContext?.status === 'expired' ? (
+                <span className="ml-1.5 text-[10px] text-amber-600 dark:text-amber-400 font-semibold">• Stale Observation</span>
+              ) : outdoorContext?.status === 'cached' ? (
+                <span className="ml-1.5 text-[10px] text-slate-500 font-semibold">• Cached</span>
+              ) : (
+                <span className="ml-1.5 text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">• Monitored Ground Telemetry</span>
+              )}
             </p>
           ) : (
             <p className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">

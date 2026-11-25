@@ -20,6 +20,7 @@
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "typecheck": "tsc --project tsconfig.json",
+    "typecheck:strict": "tsc --project tsconfig.strict.json",
     "security:scan": "vitest run tests/security/secret-scanning.test.js"
   },
   "devDependencies": {

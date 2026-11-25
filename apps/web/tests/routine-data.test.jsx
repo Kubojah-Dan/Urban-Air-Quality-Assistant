@@ -52,7 +52,7 @@ describe('RoutinePage Environmental Data & Provenance Integrity', () => {
     expect(screen.getByText(/Morning Work Commute/i)).toBeDefined();
     expect(screen.getByText(/Morning Outdoor Break/i)).toBeDefined();
     expect(screen.getByText(/Lunchtime Ventilation & Walk/i)).toBeDefined();
-    expect(screen.getByText(/Evening Return Commute/i)).toBeDefined();
+    expect(screen.getAllByText(/Evening Return Commute/i).length).toBeGreaterThan(0);
   });
 
   it('labels recommendations as precautionary when PM2.5 measurement is unavailable', () => {

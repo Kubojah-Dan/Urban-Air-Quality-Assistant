@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import { env } from '../../config/env.js';
 import { logger } from '../../observability/logger.js';
+import { getFirebaseAuth } from './firebaseAdmin.js';
 
 /**
  * Custom Error for token validation failures.
@@ -14,7 +15,7 @@ export class TokenVerificationError extends Error {
   }
 }
 
-// In-memory cache for Google public x509 certs
+// In-memory cache for Google public x509 certs (used as validated fallback)
 let googleCertsCache = null;
 let googleCertsExpiry = 0;
 
@@ -30,7 +31,7 @@ function base64UrlDecode(str) {
 }
 
 /**
- * Fetches Google public certificates for live Firebase ID token verification.
+ * Fetches Google public certificates for fallback RS256 token verification.
  */
 async function getGooglePublicKeys() {
   const now = Date.now();
@@ -69,12 +70,66 @@ async function getGooglePublicKeys() {
 }
 
 /**
+ * Fallback RS256 Verification with Google Public Certificates
+ */
+async function verifyWithGoogleCertificates(token, header, payload, headerB64, payloadB64, signatureB64, expectedProjectId) {
+  if (payload.aud !== expectedProjectId) {
+    throw new TokenVerificationError(
+      `Token audience mismatch. Expected ${expectedProjectId}, received ${payload.aud}`,
+      'INVALID_TOKEN',
+      401
+    );
+  }
+
+  const expectedIssuer = `https://securetoken.google.com/${expectedProjectId}`;
+  if (payload.iss !== expectedIssuer) {
+    throw new TokenVerificationError(
+      `Token issuer mismatch. Expected ${expectedIssuer}, received ${payload.iss}`,
+      'INVALID_TOKEN',
+      401
+    );
+  }
+
+  const certs = await getGooglePublicKeys();
+  const cert = certs[header.kid];
+  if (!cert) {
+    throw new TokenVerificationError(
+      `Unknown token key ID (kid: ${header.kid}). Public certificate not found.`,
+      'INVALID_TOKEN',
+      401
+    );
+  }
+
+  try {
+    const verifier = crypto.createVerify('RSA-SHA256');
+    verifier.update(`${headerB64}.${payloadB64}`);
+    const signatureBuffer = Buffer.from(signatureB64.replace(/-/g, '+').replace(/_/g, '/'), 'base64');
+    const isValid = verifier.verify(cert, signatureBuffer);
+
+    if (!isValid) {
+      throw new TokenVerificationError('Forged token: Cryptographic signature verification failed.', 'INVALID_TOKEN', 401);
+    }
+  } catch (err) {
+    if (err instanceof TokenVerificationError) throw err;
+    throw new TokenVerificationError(`Cryptographic verification error: ${err.message}`, 'INVALID_TOKEN', 401);
+  }
+
+  return {
+    uid: payload.sub,
+    email: payload.email,
+    claims: payload
+  };
+}
+
+/**
  * Genuine Firebase ID Token Verifier
  *
- * Adheres strictly to security requirements:
+ * Implements enterprise authentication verification:
  * 1. Checks structural integrity (3-part JWT header.payload.signature).
  * 2. Never accepts arbitrary UIDs, plain strings, or unverified headers.
- * 3. Enforces cryptographic signature verification (HS256 in test mode, RS256 with Google certs in production).
+ * 3. Enforces cryptographic signature verification:
+ *    - In test mode: isolated HS256 verification via test secret.
+ *    - In production: official Firebase Admin SDK verifyIdToken() with Google public certs.
  * 4. Strictly validates claims: expiration (exp), audience (aud), issuer (iss), subject (sub).
  * 5. Returns decoded payload. The user ID is derived exclusively from payload.sub.
  *
@@ -132,7 +187,6 @@ export async function verifyFirebaseToken(token) {
     throw new TokenVerificationError('Token claim violation: Issued in future.', 'INVALID_TOKEN', 401);
   }
 
-  // Cryptographic Signature Verification
   const expectedProjectId = env.FIREBASE_PROJECT_ID || 'dayshift-c76c2';
 
   // 1. Test Mode Verification (deterministic offline test suite)
@@ -154,56 +208,36 @@ export async function verifyFirebaseToken(token) {
     };
   }
 
-  // 2. Production RS256 Verification with Google Public Certificates
+  // Reject HS256 tokens in production mode
+  if (header.alg === 'HS256') {
+    throw new TokenVerificationError('HS256 algorithm is not permitted in production mode.', 'INVALID_ALGORITHM', 401);
+  }
+
+  // 2. Production Verification: Prefer Official Firebase Admin SDK
   if (header.alg !== 'RS256') {
     throw new TokenVerificationError(`Unsupported algorithm: ${header.alg}. Expected RS256.`, 'INVALID_TOKEN', 401);
   }
 
-  // Audience & Issuer validation for production tokens
-  if (payload.aud !== expectedProjectId) {
-    throw new TokenVerificationError(
-      `Token audience mismatch. Expected ${expectedProjectId}, received ${payload.aud}`,
-      'INVALID_TOKEN',
-      401
-    );
-  }
-
-  const expectedIssuer = `https://securetoken.google.com/${expectedProjectId}`;
-  if (payload.iss !== expectedIssuer) {
-    throw new TokenVerificationError(
-      `Token issuer mismatch. Expected ${expectedIssuer}, received ${payload.iss}`,
-      'INVALID_TOKEN',
-      401
-    );
-  }
-
-  const certs = await getGooglePublicKeys();
-  const cert = certs[header.kid];
-  if (!cert) {
-    throw new TokenVerificationError(
-      `Unknown token key ID (kid: ${header.kid}). Public certificate not found.`,
-      'INVALID_TOKEN',
-      401
-    );
-  }
-
   try {
-    const verifier = crypto.createVerify('RSA-SHA256');
-    verifier.update(`${headerB64}.${payloadB64}`);
-    const signatureBuffer = Buffer.from(signatureB64.replace(/-/g, '+').replace(/_/g, '/'), 'base64');
-    const isValid = verifier.verify(cert, signatureBuffer);
-
-    if (!isValid) {
-      throw new TokenVerificationError('Forged token: Cryptographic signature verification failed.', 'INVALID_TOKEN', 401);
+    const adminAuth = getFirebaseAuth();
+    const decodedToken = await adminAuth.verifyIdToken(token);
+    return {
+      uid: decodedToken.uid,
+      email: decodedToken.email,
+      claims: decodedToken
+    };
+  } catch (adminErr) {
+    if (adminErr.code === 'auth/id-token-expired') {
+      throw new TokenVerificationError('Token has expired according to Firebase Admin SDK.', 'EXPIRED_TOKEN', 401);
     }
-  } catch (err) {
-    if (err instanceof TokenVerificationError) throw err;
-    throw new TokenVerificationError(`Cryptographic verification error: ${err.message}`, 'INVALID_TOKEN', 401);
-  }
+    if (adminErr.code === 'auth/argument-error' || adminErr.code === 'auth/invalid-id-token') {
+      throw new TokenVerificationError(`Invalid ID token: ${adminErr.message}`, 'INVALID_TOKEN', 401);
+    }
 
-  return {
-    uid,
-    email: payload.email,
-    claims: payload
-  };
+    // If Admin SDK encounters certificate or credential initialization limits, fall back to direct Google cert verifier
+    logger.info('Firebase Admin SDK threw non-terminal error, evaluating with fallback cert verifier', {
+      error: adminErr.message
+    });
+    return verifyWithGoogleCertificates(token, header, payload, headerB64, payloadB64, signatureB64, expectedProjectId);
+  }
 }

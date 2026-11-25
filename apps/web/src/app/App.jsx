@@ -47,25 +47,32 @@ export function getPathForPage(page) {
 
 export function App() {
   const [currentPage, setCurrentPageRaw] = useState(getPageFromUrl);
+  const currentPageRef = React.useRef(currentPage);
+  currentPageRef.current = currentPage;
 
   const setCurrentPage = useCallback((pageOrFn) => {
-    setCurrentPageRaw((prevPage) => {
-      const resolved = typeof pageOrFn === 'function' ? pageOrFn(prevPage) : pageOrFn;
-      const normalized = PAGE_MAP[resolved] || 'landing';
+    const prev = currentPageRef.current;
+    const resolved = typeof pageOrFn === 'function' ? pageOrFn(prev) : pageOrFn;
+    const normalized = PAGE_MAP[resolved] || 'landing';
 
-      if (typeof window !== 'undefined') {
-        const targetPath = getPathForPage(normalized);
-        if (window.location.pathname !== targetPath) {
-          window.history.pushState({ page: normalized }, '', targetPath);
-        }
+    // Keep current page ref synchronized and update state
+    currentPageRef.current = normalized;
+    setCurrentPageRaw(normalized);
+
+    // Update browser history strictly outside the React state updater
+    if (typeof window !== 'undefined') {
+      const targetPath = getPathForPage(normalized);
+      if (window.location.pathname !== targetPath) {
+        window.history.pushState({ page: normalized }, '', targetPath);
       }
-      return normalized;
-    });
+    }
   }, []);
 
   useEffect(() => {
     const handlePopState = () => {
-      setCurrentPageRaw(getPageFromUrl());
+      const page = getPageFromUrl();
+      currentPageRef.current = page;
+      setCurrentPageRaw(page);
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);

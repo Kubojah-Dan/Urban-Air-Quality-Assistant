@@ -1,5 +1,6 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { verifyFirebaseToken, TokenVerificationError } from '../../apps/api/src/infrastructure/auth/tokenVerifier.js';
+import * as firebaseAdminModule from '../../apps/api/src/infrastructure/auth/firebaseAdmin.js';
 import { createTestToken, base64UrlEncode } from '../helpers/authTestTokens.js';
 
 describe('Security: Firebase ID Token Verifier Comprehensive Suite', () => {
@@ -68,5 +69,65 @@ describe('Security: Firebase ID Token Verifier Comprehensive Suite', () => {
   it('rejects tokens with malformed JSON segments', async () => {
     const malformed = 'not_base64_json.not_base64_json.fake_signature';
     await expect(verifyFirebaseToken(malformed)).rejects.toThrow(/Invalid JSON/i);
+  });
+
+  it('rejects HS256 tokens in production mode', async () => {
+    const originalEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'production';
+    try {
+      const token = createTestToken('user_prod_hs256');
+      await expect(verifyFirebaseToken(token)).rejects.toThrow(/HS256 algorithm is not permitted in production mode/i);
+    } finally {
+      process.env.NODE_ENV = originalEnv;
+    }
+  });
+
+  it('verifies production RS256 token via official Firebase Admin SDK when available', async () => {
+    const mockDecoded = {
+      uid: 'user_admin_sdk_verified',
+      email: 'admin_verified@example.com',
+      aud: 'dayshift-c76c2',
+      iss: 'https://securetoken.google.com/dayshift-c76c2',
+      sub: 'user_admin_sdk_verified'
+    };
+
+    const mockVerifyIdToken = vi.fn().mockResolvedValue(mockDecoded);
+    vi.spyOn(firebaseAdminModule, 'getFirebaseAuth').mockReturnValue({
+      verifyIdToken: mockVerifyIdToken
+    });
+
+    const header = base64UrlEncode({ alg: 'RS256', typ: 'JWT', kid: 'test_kid' });
+    const payload = base64UrlEncode({
+      ...mockDecoded,
+      exp: Math.floor(Date.now() / 1000) + 3600,
+      iat: Math.floor(Date.now() / 1000)
+    });
+    const rs256Token = `${header}.${payload}.mock_rs256_signature`;
+
+    const result = await verifyFirebaseToken(rs256Token);
+    expect(mockVerifyIdToken).toHaveBeenCalledWith(rs256Token);
+    expect(result.uid).toBe('user_admin_sdk_verified');
+    expect(result.email).toBe('admin_verified@example.com');
+  });
+
+  it('fails closed when Firebase Admin SDK throws expired token error', async () => {
+    const error = new Error('Firebase ID token has expired.');
+    /** @type {any} */ (error).code = 'auth/id-token-expired';
+
+    vi.spyOn(firebaseAdminModule, 'getFirebaseAuth').mockReturnValue({
+      verifyIdToken: vi.fn().mockRejectedValue(error)
+    });
+
+    const header = base64UrlEncode({ alg: 'RS256', typ: 'JWT', kid: 'test_kid' });
+    const payload = base64UrlEncode({
+      sub: 'user_expired_admin',
+      aud: 'dayshift-c76c2',
+      iss: 'https://securetoken.google.com/dayshift-c76c2',
+      exp: Math.floor(Date.now() / 1000) + 3600,
+      iat: Math.floor(Date.now() / 1000)
+    });
+    const rs256Token = `${header}.${payload}.mock_sig`;
+
+    await expect(verifyFirebaseToken(rs256Token)).rejects.toThrow(/Token has expired/i);
   });
 });

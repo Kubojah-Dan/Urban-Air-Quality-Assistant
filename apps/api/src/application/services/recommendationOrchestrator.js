@@ -16,6 +16,8 @@ export class RecommendationOrchestrator {
 
     const countryCode = evidenceBundle?.locationContext?.countryCode || 'IN';
     const primaryEvidence = evidenceBundle?.records?.[0] || null;
+    const primaryActivity = baseline?.activities?.[0] || {};
+    const commuteDistanceKm = primaryActivity.distanceKm || 10;
 
     // Determine model ranking & explanation
     let modelResult = {
@@ -52,7 +54,7 @@ export class RecommendationOrchestrator {
       baselineId: baseline.id,
       outdoorContext: buildOutdoorContextReceipt(
         primaryEvidence,
-        `Planned departure window (${usual.departureMinutes ? String(Math.floor(usual.departureMinutes / 60)).padStart(2, '0') + ':' + String(usual.departureMinutes % 60).padStart(2, '0') : '08:00'})`
+        `Planned departure window (${usual.departureMinutes ? String(Math.floor(usual.departureMinutes / 60)).padStart(2, '0') + ':' + String(usual.departureMinutes % 60).padStart(2, '0') : '08:30'})`
       ),
       indoorAction: {
         actionTitle: 'Baseline Indoor Air Routine',
@@ -70,7 +72,6 @@ export class RecommendationOrchestrator {
     };
 
     // 2. Impact Receipt for Recommended Change
-    const commuteDistanceKm = 10;
     const targetMode = recommended.requiresTransit ? 'transit' : 'walk';
     const emissionsResult = calculateEmissionsSavings(targetMode, commuteDistanceKm, countryCode);
 
@@ -79,7 +80,7 @@ export class RecommendationOrchestrator {
       baselineId: baseline.id,
       outdoorContext: buildOutdoorContextReceipt(
         primaryEvidence,
-        `Adjusted departure window (${recommended.departureMinutes !== undefined ? String(Math.floor(recommended.departureMinutes / 60)).padStart(2, '0') + ':' + String(recommended.departureMinutes % 60).padStart(2, '0') : '07:30'})`
+        `Adjusted departure window (${recommended.departureMinutes !== undefined ? String(Math.floor(recommended.departureMinutes / 60)).padStart(2, '0') + ':' + String(recommended.departureMinutes % 60).padStart(2, '0') : '08:00'})`
       ),
       indoorAction: {
         actionTitle: indoorPolicy.allowWindowVentilation

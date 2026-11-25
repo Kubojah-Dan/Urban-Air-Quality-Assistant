@@ -1,0 +1,13 @@
+# Gitleaks configuration for DayShift Urban Air Quality Assistant
+title = "DayShift Secret Scanning Configuration"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Known non-secret test fixtures and lockfiles"
+paths = [
+  '''pnpm-lock\.yaml''',
+  '''tests/helpers/authTestTokens\.js''',
+  '''tests/security/secret-scanning\.test\.js'''
+]
