@@ -7,7 +7,6 @@
 [![Privacy](https://img.shields.io/badge/privacy-DPDP%20Act%202023%20%2F%20GDPR-blueviolet.svg)](apps/web/src/features/preferences/pages/PrivacySettingsPage.jsx)
 [![License](https://img.shields.io/badge/license-MIT-lightgrey.svg)](LICENSE)
 
-> **PromptWars / Hack2Skill Challenge 6**  
 > An evidence-aware daily routine planner that delivers realistic, constraint-aware cleaner-air choices without demanding continuous GPS tracking, expensive air purifiers, or complete lifestyle disruption.
 
 ---
